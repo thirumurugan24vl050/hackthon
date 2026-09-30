@@ -1,155 +1,197 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@700&display=swap');
 
 html, body, [class*="css"] {
-    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    background-color: #0A0A0A !important;
+    color: #EAEAEA !important;
 }
 
-/* Background */
+/* CRT Scanlines Effect */
 .stApp {
-    background-color: #071017;
+    background-color: #0A0A0A !important;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px) !important;
 }
 
-/* Headings */
+/* Macro Typography */
 h1 {
-    font-size: 32px !important;
-    font-weight: 800 !important;
-    line-height: 1.15 !important;
-    letter-spacing: -0.025em !important;
-    color: #F8FAFC !important;
-    margin-bottom: 0px !important;
-    padding-bottom: 0px !important;
-}
-
-h2, h3 {
-    font-size: 18px !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-size: clamp(3rem, 6vw, 6rem) !important;
     font-weight: 700 !important;
-    line-height: 1.25 !important;
-    letter-spacing: -0.015em !important;
-    color: #F8FAFC !important;
+    letter-spacing: -0.04em !important;
+    text-transform: uppercase !important;
+    line-height: 0.9 !important;
+    color: #EAEAEA !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-bottom: 2px solid #FF2A2A;
+    padding-bottom: 8px !important;
+    margin-bottom: 24px !important;
 }
 
-p, span, div {
-    color: #CBD5E1;
-    font-size: 13px;
-    font-weight: 400;
-    line-height: 1.55;
+h2, h3, h4 {
+    font-family: 'Space Grotesk', sans-serif !important;
+    text-transform: uppercase !important;
+    letter-spacing: -0.02em !important;
+    color: #EAEAEA !important;
+    margin-top: 0 !important;
 }
 
-/* Hide anchor links */
-a.header-anchor {
-    display: none !important;
-}
-
-/* Glassmorphism Cards */
+/* Brutalist Panels */
 .metric-card, .news-item, .panel {
-    background: rgba(15, 30, 39, 0.72);
-    backdrop-filter: blur(18px);
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    border-radius: 12px;
-    padding: 16px 20px;
+    background: #0A0A0A;
+    border: 1px solid #333333;
+    border-radius: 0px !important;
+    padding: 16px;
     margin-bottom: 16px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
 }
 
-.metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+/* ASCII Decorations */
+.metric-card::before {
+    content: '[ SYS_DATA ]';
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    background: #0A0A0A;
+    padding: 0 4px;
+    font-size: 10px;
+    color: #666;
+    letter-spacing: 0.1em;
+}
+
+.news-item::before {
+    content: '< LOG_ENTRY >';
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    background: #0A0A0A;
+    padding: 0 4px;
+    font-size: 10px;
+    color: #666;
+    letter-spacing: 0.1em;
+}
+
+/* Data Values */
+.metric-card h2 {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+    margin: 16px 0 8px 0 !important;
 }
 
 .metric-card h4 {
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #94A3B8 !important;
-    margin: 0 0 8px 0;
+    font-size: 12px !important;
+    color: #888 !important;
+    margin: 0 !important;
+    letter-spacing: 0.05em !important;
 }
 
-.metric-card h2 {
-    font-size: 36px !important;
-    font-weight: 800 !important;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-    margin: 12px 0 4px 0 !important;
-    color: #F8FAFC !important;
-}
-
-.metric-card .baseline {
+.baseline {
     font-size: 11px;
-    font-weight: 500;
-    color: #94A3B8;
+    color: #666;
+    border-top: 1px solid #333;
+    padding-top: 8px;
+    margin-top: 8px;
 }
 
-/* Badges */
+/* Badges (Strict Rectangles) */
 .status-badge {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.badge-live { background: rgba(14, 165, 233, 0.15); color: #38BDF8; border: 1px solid rgba(14, 165, 233, 0.3); }
-.badge-stale { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); }
-.badge-unavail { background: rgba(148, 163, 184, 0.15); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.3); }
-.badge-official { background: rgba(52, 211, 153, 0.15); color: #34D399; border: 1px solid rgba(52, 211, 153, 0.3); }
-.badge-secondary { background: rgba(148, 163, 184, 0.15); color: #CBD5E1; border: 1px solid rgba(148, 163, 184, 0.3); }
-
-/* Severity */
-.sev-normal { color: #34D399 !important; }
-.sev-watch { color: #FBBF24 !important; }
-.sev-elevated { color: #FB923C !important; }
-.sev-high { color: #EF4444 !important; }
-.sev-critical { color: #EF4444 !important; }
-
-/* Custom Sidebar Buttons */
-.stButton > button {
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    height: 36px !important;
-}
-
-/* Subtitle */
-.page-subtitle {
-    font-size: 13px;
-    font-weight: 500;
-    color: #94A3B8;
-    margin-bottom: 24px;
-}
-
-/* Eyebrow */
-.eyebrow {
+    padding: 2px 6px;
+    border-radius: 0px !important;
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: #94A3B8;
+    letter-spacing: 0.1em;
+    border: 1px solid;
+}
+
+.badge-live { background: #0A0A0A; color: #4AF626; border-color: #4AF626; }
+.badge-unavail { background: #0A0A0A; color: #666666; border-color: #333333; }
+.badge-official { background: #0A0A0A; color: #EAEAEA; border-color: #EAEAEA; }
+.badge-secondary { background: #0A0A0A; color: #888888; border-color: #444444; }
+
+/* Severity Colors */
+.sev-normal { color: #4AF626 !important; }
+.sev-watch { color: #EAEAEA !important; }
+.sev-elevated { color: #FF2A2A !important; }
+.sev-critical { color: #FF2A2A !important; text-decoration: underline; }
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #050505 !important;
+    border-right: 1px solid #333 !important;
+}
+
+/* Streamlit specific overrides */
+.stButton > button {
+    border-radius: 0px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    background: #0A0A0A !important;
+    color: #EAEAEA !important;
+    border: 1px solid #333 !important;
+    height: 40px !important;
+    transition: all 0.1s;
+}
+
+.stButton > button:hover {
+    background: #EAEAEA !important;
+    color: #0A0A0A !important;
+    border-color: #EAEAEA !important;
+}
+
+.stButton > button:active {
+    background: #FF2A2A !important;
+    color: #0A0A0A !important;
+    border-color: #FF2A2A !important;
+}
+
+/* Text Input */
+.stTextInput > div > div > input {
+    font-family: 'JetBrains Mono', monospace !important;
+    background-color: #0A0A0A !important;
+    color: #4AF626 !important;
+    border: 1px solid #333 !important;
+    border-radius: 0px !important;
+    padding: 12px !important;
+}
+
+.stTextInput > div > div > input:focus {
+    border-color: #4AF626 !important;
+    box-shadow: none !important;
+}
+
+/* Hide anchor links */
+a.header-anchor { display: none !important; }
+
+/* Global structural elements */
+hr {
+    border-color: #333 !important;
+    border-width: 1px !important;
+    margin: 2rem 0 !important;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 32px;
+    border-left: 2px solid #FF2A2A;
+    padding-left: 12px;
+}
+
+.eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #FF2A2A;
     margin-bottom: 8px;
 }
 
-/* Hide Sidebar radio */
-section[data-testid="stSidebar"] {
-    background: rgba(15, 30, 39, 0.72) !important;
-    backdrop-filter: blur(18px) !important;
-    border-right: 1px solid rgba(148, 163, 184, 0.14) !important;
-}
+/* Alerts */
+.stAlert { border-radius: 0px !important; border: 1px solid #333 !important; background-color: #0A0A0A !important; color: #EAEAEA !important; }
+.stAlert [data-testid="stMarkdownContainer"] { font-family: 'JetBrains Mono', monospace !important; font-size: 12px !important; }
 
-/* Remove default radio buttons if they are used */
-div[role="radiogroup"] > label {
-    background: transparent;
-    padding: 8px 12px;
-    border-radius: 8px;
-    transition: background 0.2s;
-}
-div[role="radiogroup"] > label:hover {
-    background: rgba(14, 165, 233, 0.1);
-}
-div[role="radiogroup"] div[data-testid="stMarkdownContainer"] {
-    font-weight: 600;
-    color: #CBD5E1;
-}
-/* Hide the circle */
-div[role="radiogroup"] span[data-baseweb="radio"] {
-    display: none !important;
-}

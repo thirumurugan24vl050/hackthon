@@ -63,26 +63,26 @@ def fetch_dashboard_data(news_limit=20):
 
 def render_sidebar():
     with st.sidebar:
-        st.markdown(f"<div style='margin-bottom: 24px;'><span style='font-size: 20px; font-weight: 800; color: #F8FAFC; letter-spacing: -0.02em;'>?? {APP_NAME}</span><br><span style='font-size: 11px; color: #94A3B8;'>{APP_SUBTITLE}</span></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='margin-bottom: 24px;'><span style='font-size: 20px; font-weight: 700; color: #EAEAEA; letter-spacing: -0.05em;'>// {APP_NAME}</span><br><span style='font-size: 11px; color: #666; font-family: monospace;'>{APP_SUBTITLE}</span></div>", unsafe_allow_html=True)
         
-        st.markdown("<div style='font-size: 11px; font-weight: 700; color: #94A3B8; margin-bottom: 8px;'>MONITOR</div>", unsafe_allow_html=True)
-        if st.button("? Mission Control", use_container_width=True): st.session_state.page = "Mission Control"
+        st.markdown("<div style='font-size: 10px; font-weight: 700; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;'>[ OP_MODES ]</div>", unsafe_allow_html=True)
+        if st.button("> MISSION_CONTROL", use_container_width=True): st.session_state.page = "Mission Control"
         
-        st.markdown("<div style='font-size: 11px; font-weight: 700; color: #94A3B8; margin-top: 16px; margin-bottom: 8px;'>INTELLIGENCE</div>", unsafe_allow_html=True)
-        if st.button("? Environmental Intelligence", use_container_width=True): st.session_state.page = "Environmental Intelligence"
+        st.markdown("<div style='font-size: 10px; font-weight: 700; color: #666; margin-top: 16px; margin-bottom: 8px; letter-spacing: 0.1em;'>[ INTEL_FEEDS ]</div>", unsafe_allow_html=True)
+        if st.button("> ENV_INTELLIGENCE", use_container_width=True): st.session_state.page = "Environmental Intelligence"
         
-        st.markdown("<div style='font-size: 11px; font-weight: 700; color: #94A3B8; margin-top: 16px; margin-bottom: 8px;'>ANALYSIS</div>", unsafe_allow_html=True)
-        if st.button("? AI Analyst & Risk", use_container_width=True): st.session_state.page = "AI Analyst & Risk"
-        
-        st.divider()
-        st.markdown("<div style='font-size: 11px; font-weight: 700; color: #94A3B8; margin-bottom: 12px;'>DATA HEALTH</div>", unsafe_allow_html=True)
-        st.markdown("<div style='font-size: 13px;'>Weather <span class='status-badge badge-live' style='float:right'>LIVE</span></div>", unsafe_allow_html=True)
-        st.markdown("<div style='font-size: 13px; margin-top: 8px;'>Intelligence <span class='status-badge badge-live' style='float:right'>LIVE</span></div>", unsafe_allow_html=True)
-        st.markdown("<div style='font-size: 13px; margin-top: 8px;'>Hydrology <span class='status-badge badge-unavail' style='float:right'>UNAVAILABLE</span></div>", unsafe_allow_html=True)
-        st.markdown("<div style='font-size: 13px; margin-top: 8px;'>Water Quality <span class='status-badge badge-unavail' style='float:right'>UNAVAILABLE</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 10px; font-weight: 700; color: #666; margin-top: 16px; margin-bottom: 8px; letter-spacing: 0.1em;'>[ TACTICAL ]</div>", unsafe_allow_html=True)
+        if st.button("> AI_RISK_ANALYST", use_container_width=True): st.session_state.page = "AI Analyst & Risk"
         
         st.divider()
-        if st.button("Refresh", use_container_width=True):
+        st.markdown("<div style='font-size: 10px; font-weight: 700; color: #666; margin-bottom: 12px; letter-spacing: 0.1em;'>[ SYS_HEALTH ]</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 12px; font-family: monospace;'>WX_SAT <span class='status-badge badge-live' style='float:right'>LIVE</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 12px; font-family: monospace; margin-top: 8px;'>INTEL_NET <span class='status-badge badge-live' style='float:right'>LIVE</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 12px; font-family: monospace; margin-top: 8px;'>HYDRO_SENSORS <span class='status-badge badge-unavail' style='float:right'>UNAVAIL</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 12px; font-family: monospace; margin-top: 8px;'>WQ_NODE <span class='status-badge badge-unavail' style='float:right'>UNAVAIL</span></div>", unsafe_allow_html=True)
+        
+        st.divider()
+        if st.button("EXECUTE_REFRESH", use_container_width=True):
             st.rerun()
 
 def _get_sev_class(severity):
@@ -116,9 +116,9 @@ def render_hazard_card(title, data_status, score_val, band, reason):
     st.markdown(html, unsafe_allow_html=True)
 
 def page_mission_control(hydro, weather, wqi, news, alerts):
-    st.markdown("<div class='eyebrow'>HYDRO MIND / ENVIRONMENTAL OPERATIONS</div>", unsafe_allow_html=True)
+    st.markdown("<div class='eyebrow'>// HYDRO_MIND_CORE_OPS</div>", unsafe_allow_html=True)
     st.markdown("<h1>MISSION CONTROL</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='page-subtitle'>High-level overview of Bhavanisagar Dam and the Lower Bhavani River.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='page-subtitle'>MACRO-LEVEL TELEMETRY: BHAVANISAGAR RESERVOIR // LOWER BHAVANI SECTOR</div>", unsafe_allow_html=True)
     
     # Evaluate Hazards based on fetched data
     # (In a real app, this would read from the DB's latest risk evaluation)
@@ -147,19 +147,22 @@ def page_mission_control(hydro, weather, wqi, news, alerts):
     st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
     
     # Reservoir Status
-    st.markdown("<h3>Reservoir Status</h3>", unsafe_allow_html=True)
-    r_col1, r_col2, r_col3, r_col4, r_col5 = st.columns(5)
-    r_col1.metric("LEVEL", "--", delta=None, help="UNAVAILABLE")
-    r_col2.metric("STORAGE", "--")
-    r_col3.metric("INFLOW", "--")
-    r_col4.metric("OUTFLOW", "--")
-    r_col5.metric("24H LEVEL", "--")
-
+    st.markdown("<h3>[ RESERVOIR_STATUS_MATRIX ]</h3>", unsafe_allow_html=True)
+    st.markdown('''
+    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: #333; border: 1px solid #333;">
+        <div style="background: #0A0A0A; padding: 12px;"><div style="font-size: 10px; color:#888;">LEVEL</div><div style="font-family: monospace; font-size: 20px; font-weight: 700; color:#EAEAEA; margin-top: 4px;">--</div></div>
+        <div style="background: #0A0A0A; padding: 12px;"><div style="font-size: 10px; color:#888;">STORAGE</div><div style="font-family: monospace; font-size: 20px; font-weight: 700; color:#EAEAEA; margin-top: 4px;">--</div></div>
+        <div style="background: #0A0A0A; padding: 12px;"><div style="font-size: 10px; color:#888;">INFLOW</div><div style="font-family: monospace; font-size: 20px; font-weight: 700; color:#EAEAEA; margin-top: 4px;">--</div></div>
+        <div style="background: #0A0A0A; padding: 12px;"><div style="font-size: 10px; color:#888;">OUTFLOW</div><div style="font-family: monospace; font-size: 20px; font-weight: 700; color:#EAEAEA; margin-top: 4px;">--</div></div>
+        <div style="background: #0A0A0A; padding: 12px;"><div style="font-size: 10px; color:#888;">24H_LEVEL</div><div style="font-family: monospace; font-size: 20px; font-weight: 700; color:#EAEAEA; margin-top: 4px;">--</div></div>
+    </div>
+    ''', unsafe_allow_html=True)
+    
     st.markdown("<div style='height: 32px;'></div>", unsafe_allow_html=True)
     
     colA, colB = st.columns([2, 1])
     with colA:
-        st.markdown("<h3>Environmental Map</h3>", unsafe_allow_html=True)
+        st.markdown("<h3>[ GEO_SPATIAL_FEED ]</h3>", unsafe_allow_html=True)
         m = folium.Map(location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], zoom_start=14, tiles="CartoDB dark_matter")
         folium.Marker(
             [BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']],
@@ -169,64 +172,75 @@ def page_mission_control(hydro, weather, wqi, news, alerts):
         components.html(m._repr_html_(), height=450)
 
     with colB:
-        st.markdown("<h3>Active Alerts</h3>", unsafe_allow_html=True)
+        st.markdown("<h3>[ ACTIVE_ALERTS ]</h3>", unsafe_allow_html=True)
         if alerts:
             for item in alerts[:3]:
                 st.error(f"**{item['severity']}**: {item['message']}")
         else:
-            st.success("No active environmental alerts.")
+            st.success("> SYSTEM LOG: No active environmental alerts.")
             
-        st.markdown("<h3 style='margin-top:24px;'>Latest Environmental Updates</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-top:24px;'>[ LATEST_LOGS ]</h3>", unsafe_allow_html=True)
         for item in news[:4]:
             badge = _get_badge_class(item["source_type"])
             st.markdown(
                 f'''
                 <div class="news-item">
-                    <span class="status-badge {badge}">{item['source_type']}</span> <span style="font-size: 11px; color: #8b949e; float:right;">{item['time'][:16]}</span><br>
-                    <div style="margin-top: 8px;"><a href="{item['url']}" target="_blank" style="color: #F8FAFC; text-decoration: none; font-weight: 600; font-size: 13px;">{item['title']}</a></div>
-                    <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">{item['publisher']}</div>
+                    <span class="status-badge {badge}">{item['source_type']}</span> <span style="font-size: 11px; color: #666; float:right;">{item['time'][:16]}</span><br>
+                    <div style="margin-top: 12px;"><a href="{item['url']}" target="_blank" style="color: #EAEAEA; text-decoration: none; font-weight: 700; font-size: 14px; line-height: 1.4;">{item['title']}</a></div>
+                    <div style="font-size: 11px; color: #888; font-family: monospace; margin-top: 8px;">> SOURCE: {item['publisher']}</div>
                 </div>
                 ''', unsafe_allow_html=True
             )
 
 def page_environmental_intelligence(hydro, weather, wqi, news, alerts):
-    st.markdown("<div class='eyebrow'>HYDRO MIND / INTELLIGENCE</div>", unsafe_allow_html=True)
-    st.markdown("<h1>ENVIRONMENTAL INTELLIGENCE</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='page-subtitle'>Live external and environmental evidence for Bhavanisagar</div>", unsafe_allow_html=True)
+    st.markdown("<div class='eyebrow'>// INTEL_FEEDS</div>", unsafe_allow_html=True)
+    st.markdown("<h1>ENVIRONMENTAL INTEL</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='page-subtitle'>RAW FEED: EXTERNAL SIGNALS AND DECENTRALIZED DATA NODES</div>", unsafe_allow_html=True)
     
-    st.markdown("<h3>Official Updates</h3>", unsafe_allow_html=True)
-    st.info("Awaiting official connection restore from CWC and TN-WRD. Fallback to secondary intelligence enabled.")
+    st.markdown("<h3>[ OFFICIAL_UPDATES ]</h3>", unsafe_allow_html=True)
+    st.info("> LOG: Awaiting official connection restore from CWC and TN-WRD. Fallback to secondary intelligence enabled.")
     
-    st.markdown("<h3 style='margin-top:32px;'>Weather Telemetry</h3>", unsafe_allow_html=True)
-    w_col1, w_col2, w_col3 = st.columns(3)
-    w_col1.metric("Precipitation", f"{weather['precip']} mm" if weather['precip'] != "--" else "--")
-    w_col2.metric("Temperature", f"{weather['temp']} °C" if weather['temp'] != "--" else "--")
-    w_col3.metric("Wind Speed", f"{weather['wind']} km/h" if weather['wind'] != "--" else "--")
+    st.markdown("<h3 style='margin-top:32px;'>[ WX_TELEMETRY ]</h3>", unsafe_allow_html=True)
     
-    st.markdown("<h3 style='margin-top:32px;'>Satellite Indicators (Sentinel-2)</h3>", unsafe_allow_html=True)
-    s_col1, s_col2, s_col3 = st.columns(3)
-    s_col1.metric("NDWI (Water Extent)", "UNAVAILABLE", help="Requires Earth Engine API")
-    s_col2.metric("NDVI (Vegetation)", "UNAVAILABLE")
-    s_col3.metric("Cloud Cover", "UNAVAILABLE")
+    precip_val = f"{weather['precip']} mm" if weather['precip'] != "--" else "--"
+    temp_val = f"{weather['temp']} °C" if weather['temp'] != "--" else "--"
+    wind_val = f"{weather['wind']} km/h" if weather['wind'] != "--" else "--"
     
-    st.markdown("<h3 style='margin-top:32px;'>Google News Discovery</h3>", unsafe_allow_html=True)
+    st.markdown(f'''
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #333; border: 1px solid #333;">
+        <div style="background: #0A0A0A; padding: 12px;"><div style="font-size: 10px; color:#888;">PRECIPITATION</div><div style="font-family: monospace; font-size: 20px; font-weight: 700; color:#EAEAEA; margin-top: 4px;">{precip_val}</div></div>
+        <div style="background: #0A0A0A; padding: 12px;"><div style="font-size: 10px; color:#888;">TEMPERATURE</div><div style="font-family: monospace; font-size: 20px; font-weight: 700; color:#EAEAEA; margin-top: 4px;">{temp_val}</div></div>
+        <div style="background: #0A0A0A; padding: 12px;"><div style="font-size: 10px; color:#888;">WIND_SPEED</div><div style="font-family: monospace; font-size: 20px; font-weight: 700; color:#EAEAEA; margin-top: 4px;">{wind_val}</div></div>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    st.markdown("<h3 style='margin-top:32px;'>[ SATELLITE_INDICATORS // SENTINEL-2 ]</h3>", unsafe_allow_html=True)
+    st.markdown('''
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #333; border: 1px solid #333;">
+        <div style="background: #0A0A0A; padding: 12px;"><div style="font-size: 10px; color:#888;">NDWI_(WATER_EXTENT)</div><div style="font-family: monospace; font-size: 20px; font-weight: 700; color:#EAEAEA; margin-top: 4px;">UNAVAIL</div></div>
+        <div style="background: #0A0A0A; padding: 12px;"><div style="font-size: 10px; color:#888;">NDVI_(VEGETATION)</div><div style="font-family: monospace; font-size: 20px; font-weight: 700; color:#EAEAEA; margin-top: 4px;">UNAVAIL</div></div>
+        <div style="background: #0A0A0A; padding: 12px;"><div style="font-size: 10px; color:#888;">CLOUD_COVER</div><div style="font-family: monospace; font-size: 20px; font-weight: 700; color:#EAEAEA; margin-top: 4px;">UNAVAIL</div></div>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    st.markdown("<h3 style='margin-top:32px;'>[ SIGNAL_DISCOVERY ]</h3>", unsafe_allow_html=True)
     
     for item in news[:10]:
         badge = _get_badge_class(item["source_type"])
         st.markdown(
             f'''
             <div class="news-item">
-                <span class="status-badge {badge}">{item['source_type']}</span> <span style="font-size: 11px; color: #8b949e; float:right;">{item['time'][:16]}</span><br>
-                <div style="margin-top: 8px;"><a href="{item['url']}" target="_blank" style="color: #F8FAFC; text-decoration: none; font-weight: 600; font-size: 13px;">{item['title']}</a></div>
-                <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">{item['publisher']}</div>
+                <span class="status-badge {badge}">{item['source_type']}</span> <span style="font-size: 11px; color: #666; float:right;">{item['time'][:16]}</span><br>
+                <div style="margin-top: 12px;"><a href="{item['url']}" target="_blank" style="color: #EAEAEA; text-decoration: none; font-weight: 700; font-size: 14px; line-height: 1.4;">{item['title']}</a></div>
+                <div style="font-size: 11px; color: #888; font-family: monospace; margin-top: 8px;">> SOURCE: {item['publisher']}</div>
             </div>
             ''', unsafe_allow_html=True
         )
 
 def page_ai_analyst(hydro, weather, wqi, news, alerts):
-    st.markdown("<div class='eyebrow'>HYDRO MIND / ANALYSIS</div>", unsafe_allow_html=True)
+    st.markdown("<div class='eyebrow'>// TACTICAL_ANALYSIS</div>", unsafe_allow_html=True)
     st.markdown("<h1>AI ANALYST & RISK</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='page-subtitle'>Automated risk analysis and natural language interrogation.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='page-subtitle'>AUTOMATED THREAT DETECTION AND INTERROGATION INTERFACE</div>", unsafe_allow_html=True)
     
     col1, col2 = st.columns([45, 55])
     
@@ -234,10 +248,10 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts):
         st.markdown("<h3>Risk Breakdown</h3>", unsafe_allow_html=True)
         st.markdown("""
         <div class="panel">
-            <p><strong>Water Stress:</strong> <span class="status-badge badge-unavail">NOT SCORED</span><br><span style="color:#94A3B8; font-size:11px;">No official hydrology data available.</span></p>
-            <p><strong>Flood / Surplus:</strong> <span class="status-badge badge-unavail">NOT SCORED</span><br><span style="color:#94A3B8; font-size:11px;">No official inflow data available.</span></p>
-            <p><strong>Water Quality:</strong> <span class="status-badge badge-unavail">NOT SCORED</span><br><span style="color:#94A3B8; font-size:11px;">No current observation.</span></p>
-            <p><strong>Runoff / Pollution:</strong> Evaluated via Weather/News</p>
+            <p style="font-family: monospace; font-size: 12px; margin: 0 0 16px 0;"><strong>[ WATER_STRESS ]</strong> <span class="status-badge badge-unavail" style="float:right;">ERR_NO_DATA</span><br><span style="color:#666;">> Awaiting official telemetry.</span></p>
+            <p style="font-family: monospace; font-size: 12px; margin: 0 0 16px 0;"><strong>[ FLOOD_SURPLUS ]</strong> <span class="status-badge badge-unavail" style="float:right;">ERR_NO_DATA</span><br><span style="color:#666;">> Awaiting official inflow feed.</span></p>
+            <p style="font-family: monospace; font-size: 12px; margin: 0 0 16px 0;"><strong>[ WATER_QUALITY ]</strong> <span class="status-badge badge-unavail" style="float:right;">ERR_NO_DATA</span><br><span style="color:#666;">> Node offline.</span></p>
+            <p style="font-family: monospace; font-size: 12px; margin: 0 0 0px 0;"><strong>[ RUNOFF_POLLUTION ]</strong> <span class="status-badge badge-live" style="float:right;">ACTIVE</span><br><span style="color:#4AF626;">> Weather node correlating risk.</span></p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -252,30 +266,30 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts):
                     ev_str = alert['evidence']
                 
                 st.markdown(f"""
-                <div class="panel" style="border-left: 4px solid var(--{sev_class.replace('sev-', '')}, #FB923C);">
-                    <div style="font-size: 11px; font-weight: 700; color: #FB923C; margin-bottom: 4px;">{alert['severity']}</div>
-                    <div style="font-weight: 600; color: #F8FAFC; margin-bottom: 8px;">{alert['message']}</div>
-                    <div style="font-size: 11px; color: #94A3B8;">{ev_str}</div>
+                <div class="panel" style="border-left: 4px solid var(--{sev_class.replace('sev-', '')}, #FF2A2A);">
+                    <div style="font-size: 11px; font-weight: 700; font-family: monospace; color: #FF2A2A; margin-bottom: 4px;">[ {alert['severity']} ]</div>
+                    <div style="font-weight: 700; color: #EAEAEA; margin-bottom: 8px;">{alert['message']}</div>
+                    <div style="font-size: 11px; font-family: monospace; color: #888;">{ev_str}</div>
                 </div>
                 """, unsafe_allow_html=True)
         else:
-            st.success("No active environmental alerts detected in the database.")
+            st.success("> SYSTEM LOG: No active anomalies detected.")
             
     with col2:
-        st.markdown("<h3>AI ENVIRONMENTAL ANALYST</h3>", unsafe_allow_html=True)
-        st.markdown("<div style='font-size: 11px; color: #34D399; margin-bottom: 16px;'>? READY</div>", unsafe_allow_html=True)
+        st.markdown("<h3>AI TACTICAL INTERROGATION</h3>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 11px; color: #4AF626; font-family: monospace; margin-bottom: 16px;'>[ NODE ONLINE : AWAITING INPUT ]</div>", unsafe_allow_html=True)
         
-        st.markdown("<div style='font-size: 11px; font-weight: 600; color: #94A3B8; margin-bottom: 8px;'>TOOLS AVAILABLE</div>", unsafe_allow_html=True)
-        st.markdown("Reservoir Weather Satellite History Alerts News Official")
+        st.markdown("<div style='font-size: 10px; font-weight: 700; color: #666; margin-bottom: 8px; letter-spacing: 0.1em;'>[ AVAILABLE_VECTORS ]</div>", unsafe_allow_html=True)
+        st.markdown("<span style='font-family: monospace; font-size: 12px; color: #888;'>WSS_DB | OPEN_METEO | G-NEWS_API | GEE_S2</span>", unsafe_allow_html=True)
         
         st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
-        user_input = st.text_input("Ask about the current environmental state...", label_visibility="collapsed", placeholder="Ask about the current environmental state...")
-        if st.button("Analyze", type="primary"):
+        user_input = st.text_input("QUERY", label_visibility="collapsed", placeholder=">>> ENTER COMMAND OR QUERY...")
+        if st.button("EXECUTE", type="primary"):
             if user_input:
                 agent = HydroAgent()
-                with st.spinner("Agent is analyzing tools and building evidence..."):
+                with st.spinner("Processing telemetry..."):
                     response = agent.process_query(user_input)
-                    st.markdown(f"<div class='panel' style='color:#F8FAFC;'>{response}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='panel' style='color:#EAEAEA; font-family: monospace; font-size: 13px; line-height: 1.6;'>{response}</div>", unsafe_allow_html=True)
 
 def main():
     if "page" not in st.session_state:
