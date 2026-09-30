@@ -277,6 +277,45 @@ h2, h3, h4 {
 .bubble:nth-child(6) { width: 16px; height: 16px; left: 20%; animation-duration: 16s; animation-delay: 3s; }
 .bubble:nth-child(7) { width: 10px; height: 10px; left: 85%; animation-duration: 11s; animation-delay: 7s; }
 .bubble:nth-child(8) { width: 5px;  height: 5px;  left: 55%; animation-duration: 9s;  animation-delay: 6s; }
+.bubble:nth-child(9) { width: 9px;  height: 9px;  left: 40%; animation-duration: 13s; animation-delay: 8s; }
+.bubble:nth-child(10) { width: 7px; height: 7px;  left: 70%; animation-duration: 10s; animation-delay: 9s; }
+
+/* Expander Glassmorphism */
+.streamlit-expanderHeader {
+    background: rgba(15, 30, 39, 0.72) !important;
+    color: #94A3B8 !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+}
+
+.streamlit-expanderContent {
+    background: rgba(15, 30, 39, 0.5) !important;
+    border: 1px solid rgba(148, 163, 184, 0.14) !important;
+    border-radius: 0 0 8px 8px !important;
+    color: #CBD5E1 !important;
+}
+
+/* Radio and Selectbox */
+.stRadio > div { color: #94A3B8 !important; }
+.stRadio label { color: #CBD5E1 !important; }
+.stSelectbox > div > div { background: rgba(15, 30, 39, 0.72) !important; color: #F8FAFC !important; border-color: rgba(148, 163, 184, 0.2) !important; border-radius: 8px !important; }
+
+/* Table styling inside panels */
+.panel table th {
+    color: #94A3B8 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+.panel table td {
+    color: #CBD5E1 !important;
+    font-size: 13px !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.07) !important;
+}
 
 @keyframes rise {
     0% {

@@ -1,0 +1,213 @@
+{
+  "location": {
+    "name": "Bhavanisagar Dam",
+    "alias": "Lower Bhavani Dam",
+    "river": "Lower Bhavani River",
+    "district": "Erode",
+    "state": "Tamil Nadu",
+    "latitude": 11.47083,
+    "longitude": 77.11389
+  },
+  "timestamp": "2026-07-06T10:30:00+05:30",
+  "scenarios": {
+    "NORMAL": {
+      "reservoir": {
+        "level_ft": {"value": 53.02, "unit": "ft", "display_label": "Water Level", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "storage_mcft": {"value": 5198, "unit": "MCft", "display_label": "Live Storage", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "inflow_cusecs": {"value": 58, "unit": "cusecs", "display_label": "Inflow", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "outflow_cusecs": {"value": 555, "unit": "cusecs", "display_label": "Outflow", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "full_depth_ft": {"value": 105, "unit": "ft", "display_label": "Full Reservoir Level", "source": "Tamil Nadu AgriNet", "provenance": "REFERENCE", "timestamp": "2026-07-06", "is_demo": true},
+        "full_capacity_mcft": {"value": 32800, "unit": "MCft", "display_label": "Gross Capacity", "source": "Tamil Nadu AgriNet", "provenance": "REFERENCE", "timestamp": "2026-07-06", "is_demo": true},
+        "last_year_level_ft": {"value": 94.56, "unit": "ft", "display_label": "Last Year Level", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2025-07-06", "is_demo": true},
+        "last_year_storage_mcft": {"value": 24680, "unit": "MCft", "display_label": "Last Year Storage", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2025-07-06", "is_demo": true}
+      },
+      "weather": {
+        "temperature_c": {"value": 28.4, "unit": "°C", "display_label": "Temperature", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "precipitation_mm": {"value": 2.1, "unit": "mm", "display_label": "Precipitation", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "humidity_pct": {"value": 75, "unit": "%", "display_label": "Humidity", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "wind_kmh": {"value": 14.2, "unit": "km/h", "display_label": "Wind Speed", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "pressure_hpa": {"value": 1008.2, "unit": "hPa", "display_label": "Pressure", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "condition": {"value": "Partly Cloudy", "unit": "", "display_label": "Condition", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true}
+      },
+      "water_quality": {
+        "ph": {"value": 7.85, "unit": "", "display_label": "pH", "source": "Published Bhavani Sagar Dataset", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true},
+        "do_mgl": {"value": 6.18, "unit": "mg/L", "display_label": "Dissolved Oxygen", "source": "Published Bhavani Sagar Dataset", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true},
+        "turbidity_ntu": {"value": 3, "unit": "NTU", "display_label": "Turbidity", "source": "Published Bhavani Sagar Dataset", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true},
+        "tds_mgl": {"value": 183, "unit": "mg/L", "display_label": "TDS", "source": "Published Bhavani Sagar Dataset", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true},
+        "conductivity": {"value": 273, "unit": "µS/cm", "display_label": "Conductivity", "source": "Published Bhavani Sagar Dataset", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true},
+        "bod_mgl": {"value": 1, "unit": "mg/L", "display_label": "BOD", "source": "Published Bhavani Sagar Dataset", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true},
+        "cod_mgl": {"value": 17, "unit": "mg/L", "display_label": "COD", "source": "Published Bhavani Sagar Dataset", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true},
+        "nitrate_mgl": {"value": 0.17, "unit": "mg/L", "display_label": "Nitrate", "source": "Published Bhavani Sagar Dataset", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true},
+        "temperature_c": {"value": 27.5, "unit": "°C", "display_label": "Water Temperature", "source": "Published Bhavani Sagar Dataset", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true},
+        "tnpcb_class": {"value": "B", "unit": "", "display_label": "TNPCB Classification", "source": "TNPCB Annual Report", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true},
+        "tnpcb_station_code": {"value": "1321", "unit": "", "display_label": "Station Code", "source": "TNPCB", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true}
+      },
+      "satellite": {
+        "ndwi": {"value": 0.32, "unit": "", "display_label": "NDWI", "source": "NASA GIBS / Sentinel-2", "provenance": "DEMO", "timestamp": "2026-07-04", "is_demo": true},
+        "mndwi": {"value": 0.28, "unit": "", "display_label": "MNDWI", "source": "NASA GIBS / Sentinel-2", "provenance": "DEMO", "timestamp": "2026-07-04", "is_demo": true},
+        "water_extent_km2": {"value": 18.6, "unit": "km²", "display_label": "Water Extent", "source": "NASA GIBS / Sentinel-2", "provenance": "DEMO", "timestamp": "2026-07-04", "is_demo": true},
+        "layer": {"value": "MODIS_Terra_CorrectedReflectance_TrueColor", "unit": "", "display_label": "Imagery Layer", "source": "NASA GIBS", "provenance": "SATELLITE", "timestamp": "2026-07-04", "is_demo": true}
+      },
+      "flood_model": {
+        "discharge_m3s": {"value": 15.2, "unit": "m³/s", "display_label": "River Discharge", "source": "Open-Meteo GloFAS", "provenance": "MODEL", "timestamp": "2026-07-06", "is_demo": true},
+        "mean_m3s": {"value": 18.5, "unit": "m³/s", "display_label": "Mean Discharge", "source": "Open-Meteo GloFAS", "provenance": "MODEL", "timestamp": "2026-07-06", "is_demo": true},
+        "max_m3s": {"value": 22.1, "unit": "m³/s", "display_label": "Max Discharge", "source": "Open-Meteo GloFAS", "provenance": "MODEL", "timestamp": "2026-07-06", "is_demo": true}
+      },
+      "news": [
+        {"title": "Bhavanisagar dam water level stands at 53 feet", "publisher": "The Hindu", "source_type": "SECONDARY", "category": "ENVIRONMENTAL", "url": "https://www.thehindu.com", "time": "2026-07-06T08:00:00Z"},
+        {"title": "Southwest monsoon weakens over western Tamil Nadu", "publisher": "Times of India", "source_type": "DISCOVERY", "category": "WEATHER", "url": "https://timesofindia.indiatimes.com", "time": "2026-07-06T06:30:00Z"},
+        {"title": "Farmers demand increased water release from Bhavanisagar", "publisher": "Deccan Herald", "source_type": "DISCOVERY", "category": "WATER_MANAGEMENT", "url": "https://www.deccanherald.com", "time": "2026-07-05T14:00:00Z"},
+        {"title": "Erode district officials review reservoir status ahead of monsoon", "publisher": "The New Indian Express", "source_type": "DISCOVERY", "category": "GOVERNANCE", "url": "https://www.newindianexpress.com", "time": "2026-07-05T10:00:00Z"},
+        {"title": "Lower Bhavani basin receives scattered rainfall", "publisher": "Dinamalar", "source_type": "DISCOVERY", "category": "WEATHER", "url": "https://www.dinamalar.com", "time": "2026-07-04T16:00:00Z"}
+      ],
+      "alerts": [],
+      "activity": [
+        {"message": "Weather telemetry refreshed", "timestamp": "2026-07-06T10:30:00Z", "source": "Open-Meteo"},
+        {"message": "Reservoir dataset loaded (DEMO reference)", "timestamp": "2026-07-06T10:28:00Z", "source": "Tamil Nadu AgriNet"},
+        {"message": "News discovery completed — 5 items", "timestamp": "2026-07-06T10:25:00Z", "source": "Google News"},
+        {"message": "Risk engine evaluated — all hazards scored", "timestamp": "2026-07-06T10:32:00Z", "source": "HYDRO MIND"},
+        {"message": "Satellite imagery loaded (MODIS True Color)", "timestamp": "2026-07-06T10:20:00Z", "source": "NASA GIBS"},
+        {"message": "AI tools connected and ready", "timestamp": "2026-07-06T10:15:00Z", "source": "HYDRO MIND"}
+      ]
+    },
+    "LOW_STORAGE": {
+      "reservoir": {
+        "level_ft": {"value": 35.10, "unit": "ft", "display_label": "Water Level", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "storage_mcft": {"value": 1850, "unit": "MCft", "display_label": "Live Storage", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "inflow_cusecs": {"value": 22, "unit": "cusecs", "display_label": "Inflow", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "outflow_cusecs": {"value": 620, "unit": "cusecs", "display_label": "Outflow", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "full_depth_ft": {"value": 105, "unit": "ft", "display_label": "Full Reservoir Level", "source": "Tamil Nadu AgriNet", "provenance": "REFERENCE", "timestamp": "2026-07-06", "is_demo": true},
+        "full_capacity_mcft": {"value": 32800, "unit": "MCft", "display_label": "Gross Capacity", "source": "Tamil Nadu AgriNet", "provenance": "REFERENCE", "timestamp": "2026-07-06", "is_demo": true},
+        "last_year_level_ft": {"value": 94.56, "unit": "ft", "display_label": "Last Year Level", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2025-07-06", "is_demo": true},
+        "last_year_storage_mcft": {"value": 24680, "unit": "MCft", "display_label": "Last Year Storage", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2025-07-06", "is_demo": true}
+      },
+      "weather": {
+        "temperature_c": {"value": 34.8, "unit": "°C", "display_label": "Temperature", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "precipitation_mm": {"value": 0.0, "unit": "mm", "display_label": "Precipitation", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "humidity_pct": {"value": 42, "unit": "%", "display_label": "Humidity", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "wind_kmh": {"value": 8.5, "unit": "km/h", "display_label": "Wind Speed", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "pressure_hpa": {"value": 1005.6, "unit": "hPa", "display_label": "Pressure", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "condition": {"value": "Clear Sky", "unit": "", "display_label": "Condition", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true}
+      },
+      "news": [
+        {"title": "Water crisis looms as Bhavanisagar storage dips to 5.64%", "publisher": "The Hindu", "source_type": "SECONDARY", "category": "WATER_MANAGEMENT", "url": "https://www.thehindu.com", "time": "2026-07-06T08:00:00Z"},
+        {"title": "Erode farmers demand emergency water release from Mettur", "publisher": "Times of India", "source_type": "DISCOVERY", "category": "GOVERNANCE", "url": "https://timesofindia.indiatimes.com", "time": "2026-07-06T06:30:00Z"},
+        {"title": "Tamil Nadu reservoirs at critically low levels ahead of monsoon", "publisher": "Deccan Herald", "source_type": "DISCOVERY", "category": "ENVIRONMENTAL", "url": "https://www.deccanherald.com", "time": "2026-07-05T14:00:00Z"}
+      ],
+      "alerts": [
+        {"hazard_category": "Water Stress", "severity": "HIGH", "message": "Reservoir storage critically low at 5.64%", "evidence": ["Storage ratio below 10%", "Negative net flow: -598 cusecs", "No significant rainfall forecast"]}
+      ]
+    },
+    "HEAVY_RAINFALL": {
+      "reservoir": {
+        "level_ft": {"value": 78.50, "unit": "ft", "display_label": "Water Level", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "storage_mcft": {"value": 18500, "unit": "MCft", "display_label": "Live Storage", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "inflow_cusecs": {"value": 4200, "unit": "cusecs", "display_label": "Inflow", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "outflow_cusecs": {"value": 2800, "unit": "cusecs", "display_label": "Outflow", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "full_depth_ft": {"value": 105, "unit": "ft", "display_label": "Full Reservoir Level", "source": "Tamil Nadu AgriNet", "provenance": "REFERENCE", "timestamp": "2026-07-06", "is_demo": true},
+        "full_capacity_mcft": {"value": 32800, "unit": "MCft", "display_label": "Gross Capacity", "source": "Tamil Nadu AgriNet", "provenance": "REFERENCE", "timestamp": "2026-07-06", "is_demo": true},
+        "last_year_level_ft": {"value": 94.56, "unit": "ft", "display_label": "Last Year Level", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2025-07-06", "is_demo": true},
+        "last_year_storage_mcft": {"value": 24680, "unit": "MCft", "display_label": "Last Year Storage", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2025-07-06", "is_demo": true}
+      },
+      "weather": {
+        "temperature_c": {"value": 24.1, "unit": "°C", "display_label": "Temperature", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "precipitation_mm": {"value": 48.5, "unit": "mm", "display_label": "Precipitation", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "humidity_pct": {"value": 94, "unit": "%", "display_label": "Humidity", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "wind_kmh": {"value": 28.6, "unit": "km/h", "display_label": "Wind Speed", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "pressure_hpa": {"value": 1002.1, "unit": "hPa", "display_label": "Pressure", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "condition": {"value": "Heavy Rain", "unit": "", "display_label": "Condition", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true}
+      },
+      "flood_model": {
+        "discharge_m3s": {"value": 185.3, "unit": "m³/s", "display_label": "River Discharge", "source": "Open-Meteo GloFAS", "provenance": "MODEL", "timestamp": "2026-07-06", "is_demo": true},
+        "mean_m3s": {"value": 18.5, "unit": "m³/s", "display_label": "Mean Discharge", "source": "Open-Meteo GloFAS", "provenance": "MODEL", "timestamp": "2026-07-06", "is_demo": true},
+        "max_m3s": {"value": 210.8, "unit": "m³/s", "display_label": "Max Discharge", "source": "Open-Meteo GloFAS", "provenance": "MODEL", "timestamp": "2026-07-06", "is_demo": true}
+      },
+      "news": [
+        {"title": "Heavy rainfall lashes Erode district; Bhavanisagar inflow surges", "publisher": "The Hindu", "source_type": "SECONDARY", "category": "FLOOD", "url": "https://www.thehindu.com", "time": "2026-07-06T08:00:00Z"},
+        {"title": "Flood alert issued for Lower Bhavani basin areas", "publisher": "Times of India", "source_type": "DISCOVERY", "category": "FLOOD", "url": "https://timesofindia.indiatimes.com", "time": "2026-07-06T06:30:00Z"},
+        {"title": "IMD warns of more heavy rainfall in western Tamil Nadu", "publisher": "NDTV", "source_type": "DISCOVERY", "category": "WEATHER", "url": "https://www.ndtv.com", "time": "2026-07-05T14:00:00Z"}
+      ],
+      "alerts": [
+        {"hazard_category": "Flood / Surplus", "severity": "ELEVATED", "message": "Heavy rainfall detected: 48.5 mm; river discharge elevated", "evidence": ["Precipitation 48.5mm exceeds 30mm threshold", "Model discharge 185.3 m³/s (10x mean)", "Rapid inflow increase: 4200 cusecs"]},
+        {"hazard_category": "Runoff / Pollution", "severity": "WATCH", "message": "Possible runoff event due to heavy rainfall", "evidence": ["Heavy rainfall: 48.5mm", "Elevated turbidity risk", "Urban/agricultural runoff likely"]}
+      ]
+    },
+    "POLLUTION_RUNOFF": {
+      "reservoir": {
+        "level_ft": {"value": 62.30, "unit": "ft", "display_label": "Water Level", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "storage_mcft": {"value": 8400, "unit": "MCft", "display_label": "Live Storage", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "inflow_cusecs": {"value": 1200, "unit": "cusecs", "display_label": "Inflow", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "outflow_cusecs": {"value": 800, "unit": "cusecs", "display_label": "Outflow", "source": "Simulated", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "full_depth_ft": {"value": 105, "unit": "ft", "display_label": "Full Reservoir Level", "source": "Tamil Nadu AgriNet", "provenance": "REFERENCE", "timestamp": "2026-07-06", "is_demo": true},
+        "full_capacity_mcft": {"value": 32800, "unit": "MCft", "display_label": "Gross Capacity", "source": "Tamil Nadu AgriNet", "provenance": "REFERENCE", "timestamp": "2026-07-06", "is_demo": true},
+        "last_year_level_ft": {"value": 94.56, "unit": "ft", "display_label": "Last Year Level", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2025-07-06", "is_demo": true},
+        "last_year_storage_mcft": {"value": 24680, "unit": "MCft", "display_label": "Last Year Storage", "source": "Tamil Nadu AgriNet", "provenance": "DEMO", "timestamp": "2025-07-06", "is_demo": true}
+      },
+      "weather": {
+        "temperature_c": {"value": 26.3, "unit": "°C", "display_label": "Temperature", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "precipitation_mm": {"value": 35.2, "unit": "mm", "display_label": "Precipitation", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "humidity_pct": {"value": 88, "unit": "%", "display_label": "Humidity", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "wind_kmh": {"value": 16.4, "unit": "km/h", "display_label": "Wind Speed", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "pressure_hpa": {"value": 1004.8, "unit": "hPa", "display_label": "Pressure", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true},
+        "condition": {"value": "Moderate Rain", "unit": "", "display_label": "Condition", "source": "Open-Meteo", "provenance": "DEMO", "timestamp": "2026-07-06T10:30:00", "is_demo": true}
+      },
+      "water_quality": {
+        "ph": {"value": 7.2, "unit": "", "display_label": "pH", "source": "Simulated Pollution Event", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "do_mgl": {"value": 4.1, "unit": "mg/L", "display_label": "Dissolved Oxygen", "source": "Simulated Pollution Event", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "turbidity_ntu": {"value": 18, "unit": "NTU", "display_label": "Turbidity", "source": "Simulated Pollution Event", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "tds_mgl": {"value": 420, "unit": "mg/L", "display_label": "TDS", "source": "Simulated Pollution Event", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "conductivity": {"value": 580, "unit": "µS/cm", "display_label": "Conductivity", "source": "Simulated Pollution Event", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "bod_mgl": {"value": 5.8, "unit": "mg/L", "display_label": "BOD", "source": "Simulated Pollution Event", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "cod_mgl": {"value": 32, "unit": "mg/L", "display_label": "COD", "source": "Simulated Pollution Event", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "nitrate_mgl": {"value": 2.8, "unit": "mg/L", "display_label": "Nitrate", "source": "Simulated Pollution Event", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "temperature_c": {"value": 26.0, "unit": "°C", "display_label": "Water Temperature", "source": "Simulated Pollution Event", "provenance": "DEMO", "timestamp": "2026-07-06", "is_demo": true},
+        "tnpcb_class": {"value": "B", "unit": "", "display_label": "TNPCB Classification", "source": "TNPCB Annual Report", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true},
+        "tnpcb_station_code": {"value": "1321", "unit": "", "display_label": "Station Code", "source": "TNPCB", "provenance": "REFERENCE", "timestamp": "2023-2024", "is_demo": true}
+      },
+      "news": [
+        {"title": "Industrial effluent discharge reported near Bhavani River", "publisher": "The Hindu", "source_type": "DISCOVERY", "category": "POLLUTION", "url": "https://www.thehindu.com", "time": "2026-07-06T08:00:00Z"},
+        {"title": "TNPCB issues notice to dyeing units in Erode for illegal discharge", "publisher": "Times of India", "source_type": "SECONDARY", "category": "POLLUTION", "url": "https://timesofindia.indiatimes.com", "time": "2026-07-06T06:30:00Z"},
+        {"title": "Residents complain of foul smell from Bhavani River near Sathyamangalam", "publisher": "Deccan Herald", "source_type": "DISCOVERY", "category": "POLLUTION", "url": "https://www.deccanherald.com", "time": "2026-07-05T14:00:00Z"},
+        {"title": "Rainfall washes agricultural chemicals into Lower Bhavani canal", "publisher": "The New Indian Express", "source_type": "DISCOVERY", "category": "POLLUTION", "url": "https://www.newindianexpress.com", "time": "2026-07-05T10:00:00Z"}
+      ],
+      "alerts": [
+        {"hazard_category": "Runoff / Pollution", "severity": "ELEVATED", "message": "Possible pollution/runoff event detected", "evidence": ["Heavy rainfall: 35.2mm", "Elevated turbidity: 18 NTU", "Low DO: 4.1 mg/L (below 5mg/L threshold)", "Multiple news reports of industrial discharge"]},
+        {"hazard_category": "Water Quality", "severity": "WATCH", "message": "Water quality parameters degraded", "evidence": ["BOD 5.8 mg/L exceeds 3 mg/L threshold", "COD 32 mg/L exceeds 10 mg/L threshold", "Turbidity 18 NTU exceeds 5 NTU threshold"]}
+      ]
+    }
+  },
+  "history": {
+    "reservoir_7day": [
+      {"date": "2026-06-30", "level_ft": 51.20, "storage_mcft": 4850},
+      {"date": "2026-07-01", "level_ft": 51.85, "storage_mcft": 4950},
+      {"date": "2026-07-02", "level_ft": 52.10, "storage_mcft": 5020},
+      {"date": "2026-07-03", "level_ft": 52.40, "storage_mcft": 5060},
+      {"date": "2026-07-04", "level_ft": 52.65, "storage_mcft": 5100},
+      {"date": "2026-07-05", "level_ft": 52.88, "storage_mcft": 5150},
+      {"date": "2026-07-06", "level_ft": 53.02, "storage_mcft": 5198}
+    ],
+    "weather_24h": [
+      {"hour": "00:00", "temp_c": 24.2, "precip_mm": 0.0},
+      {"hour": "02:00", "temp_c": 23.8, "precip_mm": 0.0},
+      {"hour": "04:00", "temp_c": 23.1, "precip_mm": 0.2},
+      {"hour": "06:00", "temp_c": 23.5, "precip_mm": 0.5},
+      {"hour": "08:00", "temp_c": 25.8, "precip_mm": 0.8},
+      {"hour": "10:00", "temp_c": 28.4, "precip_mm": 0.4},
+      {"hour": "12:00", "temp_c": 30.2, "precip_mm": 0.0},
+      {"hour": "14:00", "temp_c": 31.5, "precip_mm": 0.0},
+      {"hour": "16:00", "temp_c": 30.8, "precip_mm": 0.2},
+      {"hour": "18:00", "temp_c": 28.9, "precip_mm": 0.0},
+      {"hour": "20:00", "temp_c": 26.5, "precip_mm": 0.0},
+      {"hour": "22:00", "temp_c": 25.1, "precip_mm": 0.0}
+    ]
+  },
+  "ai_context": {
+    "tools": ["Reservoir", "Weather", "Satellite", "History", "News", "Alerts"],
+    "quick_questions": [
+      "Why is water stress elevated?",
+      "What changed today?",
+      "What are the latest environmental updates?",
+      "Is there evidence of runoff or pollution?"
+    ]
+  }
+}
