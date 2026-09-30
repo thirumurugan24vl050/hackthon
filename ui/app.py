@@ -6,7 +6,7 @@ from pathlib import Path
 import streamlit as st
 import pandas as pd
 import folium
-from streamlit_folium import st_folium
+import streamlit.components.v1 as components
 
 # Add project root to path
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -187,10 +187,10 @@ def render_dashboard():
         m = folium.Map(location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], zoom_start=11, tiles="CartoDB dark_matter")
         folium.Marker(
             [BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']],
-            popup=BHAVANISAGAR_DAM['name'],
-            tooltip=BHAVANISAGAR_DAM['name']
+            popup=str(BHAVANISAGAR_DAM['name']),
+            tooltip=str(BHAVANISAGAR_DAM['name'])
         ).add_to(m)
-        st_folium(m, height=400, width=700)
+        components.html(m._repr_html_(), height=400)
         
         st.markdown("### AI Environmental Analyst")
         user_input = st.text_input("Ask a question based on live telemetry and news:")
