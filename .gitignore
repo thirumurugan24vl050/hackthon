@@ -1,0 +1,19 @@
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Database (Do not commit live DBs)
+*.db
+*.sqlite3
+
+# Python caches
+__pycache__/
+*.pyc
+
+# IDEs
+.vscode/
+.idea/
+
+# macOS
+.DS_Store

@@ -1,0 +1,30 @@
+# Keywords used to determine the relevance of news articles
+
+high_priority:
+  - "Bhavanisagar"
+  - "Lower Bhavani"
+  - "Bhavani River"
+
+medium_priority:
+  - "Erode"
+  - "reservoir"
+  - "water level"
+  - "storage"
+  - "inflow"
+  - "outflow"
+  - "release"
+  - "surplus"
+  - "flood"
+  - "rainfall"
+  - "pollution"
+  - "water quality"
+  - "turbidity"
+  - "drinking water"
+  - "irrigation"
+
+entities:
+  - "CWC"
+  - "WRD"
+  - "TNPCB"
+  - "CPCB"
+  - "IMD"

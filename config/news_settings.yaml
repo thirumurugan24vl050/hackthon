@@ -1,0 +1,13 @@
+google_news:
+  enabled: true
+  country: IN
+  language: en
+  refresh_minutes: 5
+  request_timeout_seconds: 15
+  max_items_per_feed: 30
+
+ui:
+  refresh_seconds: 60
+
+new_badge:
+  duration_minutes: 30

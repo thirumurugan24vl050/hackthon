@@ -1,0 +1,15 @@
+official_domains:
+  - tnagriculture.in
+  - tn.gov.in
+  - wrd.tn.gov.in
+  - cwc.gov.in
+  - indiawris.gov.in
+  - cpcb.nic.in
+  - cpcb.gov.in
+  - tnpcb.gov.in
+  - imd.gov.in
+  - mausam.imd.gov.in
+  - water.tn.gov.in
+
+# Only news items whose source_domain matches or ends with one of these
+# will be classified as 'OFFICIAL'. All others default to 'SECONDARY'.
