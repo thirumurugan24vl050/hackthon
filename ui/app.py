@@ -67,29 +67,24 @@ st.markdown("""
     .news-item { margin-bottom: 10px; }
     .news-official { color: #36D6E8; font-weight: bold; font-size: 0.8em; border: 1px solid #36D6E8; padding: 2px 4px; border-radius: 4px; }
     .news-secondary { color: #8b949e; font-weight: bold; font-size: 0.8em; border: 1px solid #8b949e; padding: 2px 4px; border-radius: 4px; }
-    
     </style>
 """, unsafe_allow_html=True)
 
 
-def fetch_dashboard_data():
+def fetch_dashboard_data(news_limit=20):
     """Fetch all necessary data from the SQLite database."""
-    # Ensure DB is initialized
     init_db()
     
-    # If no data exists, run the orchestrator to populate it
     try:
         check = execute_query("SELECT COUNT(*) as count FROM observations")
         if check and check[0]['count'] == 0:
             with st.spinner("Initializing system and fetching live intelligence..."):
                 run_pipeline()
     except Exception:
-        pass # Handle table not found before init
+        pass
         
-    # Hydrology
     hydro_data = {"status": "UNAVAILABLE", "level": "--", "storage": "--", "inflow": "--", "outflow": "--"}
     
-    # Weather
     weather_rows = execute_query(
         "SELECT parameter, value, unit, timestamp_ist, status FROM observations WHERE source = 'Open-Meteo' ORDER BY id DESC LIMIT 4"
     )
@@ -101,18 +96,13 @@ def fetch_dashboard_data():
             if row["parameter"] == "precipitation": weather_data["precip"] = f"{row['value']} {row['unit']}"
             if row["parameter"] == "wind_speed_10m": weather_data["wind"] = f"{row['value']} {row['unit']}"
             
-    # Water Quality
     wqi_data = {"status": "UNAVAILABLE"}
-    
-    # Runoff / Pollution
     runoff_data = {"status": "UNAVAILABLE"}
     
-    # News
     news = execute_query(
-        "SELECT title, url, publisher, source_type, published_at_utc as time FROM news_items WHERE status = 'ACTIVE' ORDER BY published_at_utc DESC LIMIT 5"
+        f"SELECT title, url, publisher, source_type, published_at_utc as time FROM news_items WHERE status = 'ACTIVE' ORDER BY published_at_utc DESC LIMIT {news_limit}"
     )
     
-    # Alerts
     alerts = execute_query(
         "SELECT hazard_category, severity, message FROM alerts WHERE is_active = 1 ORDER BY created_at DESC"
     )
@@ -122,15 +112,17 @@ def fetch_dashboard_data():
 def render_sidebar():
     with st.sidebar:
         st.title(f"💧 {APP_NAME}")
-        st.caption(f"{APP_SUBTITLE} v{APP_VERSION}")
+        st.caption("AI Environmental Intelligence Platform")
         
         st.divider()
-        st.markdown("### Location")
-        st.markdown(f"**{BHAVANISAGAR_DAM['name']}**")
-        st.caption(f"{BHAVANISAGAR_DAM['latitude']}° N, {BHAVANISAGAR_DAM['longitude']}° E")
+        page = st.radio(
+            "NAVIGATION",
+            ["Mission Control", "Environmental Intelligence", "AI Analyst & Risk"],
+            label_visibility="collapsed"
+        )
         
         st.divider()
-        st.markdown("### Data Provenance")
+        st.markdown("### Data Health")
         st.markdown("✅ **Weather:** Open-Meteo (LIVE)")
         st.markdown("✅ **Intelligence:** Google News (LIVE)")
         st.markdown("⚠️ **Hydrology:** CWC/TN-WRD (UNAVAILABLE)")
@@ -139,6 +131,8 @@ def render_sidebar():
         st.divider()
         if st.button("Refresh Dashboard"):
             st.rerun()
+            
+        return page
 
 def render_hazard_card(title, status_text, value, baseline_text, risk_class):
     badge_class = "status-live" if status_text == "LIVE" else "status-unavail"
@@ -152,13 +146,10 @@ def render_hazard_card(title, status_text, value, baseline_text, risk_class):
     """
     st.markdown(html, unsafe_allow_html=True)
 
-def render_dashboard():
-    st.title("HYDRO MIND — Command Center")
-    st.caption("AI Environmental Intelligence Platform")
+def page_mission_control(hydro, weather, wqi, runoff, news, alerts):
+    st.title("Mission Control")
+    st.caption("High-level overview of Bhavanisagar Dam and the Lower Bhavani River.")
     
-    hydro, weather, wqi, runoff, news, alerts = fetch_dashboard_data()
-    
-    st.markdown("### Four Independent Hazards")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         render_hazard_card("WATER STRESS", hydro["status"], hydro["storage"], "Baseline: 32.8 TMC (Capacity)", "NORMAL")
@@ -167,7 +158,6 @@ def render_dashboard():
     with col3:
         render_hazard_card("WATER QUALITY", wqi["status"], "--", "Threshold: >50 WQI", "NORMAL")
     with col4:
-        # We will use Weather + Alerts for Runoff logic as a proxy if we have alerts
         r_risk = "NORMAL"
         r_val = "--"
         if weather["status"] == "LIVE":
@@ -181,28 +171,19 @@ def render_dashboard():
     st.divider()
     
     colA, colB = st.columns([2, 1])
-    
     with colA:
         st.markdown("### Location Map")
-        m = folium.Map(location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], zoom_start=11, tiles="CartoDB dark_matter")
+        m = folium.Map(location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], zoom_start=11, tiles="OpenStreetMap")
         folium.Marker(
             [BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']],
             popup=str(BHAVANISAGAR_DAM['name']),
             tooltip=str(BHAVANISAGAR_DAM['name'])
         ).add_to(m)
         components.html(m._repr_html_(), height=400)
-        
-        st.markdown("### AI Environmental Analyst")
-        user_input = st.text_input("Ask a question based on live telemetry and news:")
-        if user_input:
-            agent = HydroAgent()
-            with st.spinner("Analyzing..."):
-                response = agent.process_query(user_input)
-                st.info(response)
 
     with colB:
         st.markdown("### Latest Environmental Updates")
-        for item in news:
+        for item in news[:5]:
             badge = "news-official" if item["source_type"] == "OFFICIAL" else "news-secondary"
             st.markdown(
                 f"""
@@ -213,19 +194,93 @@ def render_dashboard():
                 </div>
                 """, unsafe_allow_html=True
             )
-            
+
+def page_environmental_intelligence(hydro, weather, wqi, runoff, news, alerts):
+    st.title("Environmental Intelligence")
+    st.caption("Deep dive into source data, verified news, and satellite telemetry.")
+    
+    st.markdown("### 🟢 Official Updates")
+    st.info("Awaiting official connection restore from CWC and TN-WRD. Fallback to secondary intelligence enabled.")
+    
+    st.markdown("### ☁️ Weather Telemetry")
+    w_col1, w_col2, w_col3 = st.columns(3)
+    w_col1.metric("Precipitation", weather["precip"])
+    w_col2.metric("Temperature", weather["temp"])
+    w_col3.metric("Wind Speed", weather["wind"])
+    
+    st.divider()
+    
+    st.markdown("### 🛰️ Satellite Indices (Sentinel-2)")
+    s_col1, s_col2, s_col3 = st.columns(3)
+    s_col1.metric("NDWI (Water Extent)", "UNAVAILABLE", help="Requires Earth Engine API")
+    s_col2.metric("NDVI (Vegetation)", "UNAVAILABLE")
+    s_col3.metric("Cloud Cover", "UNAVAILABLE")
+    
+    st.divider()
+    
+    st.markdown("### 📰 Google News Discovery")
+    filter_type = st.radio("Filter", ["All", "Official", "Weather", "Reservoir", "Water"], horizontal=True)
+    
+    # Simple frontend filter mock
+    filtered_news = news
+    if filter_type != "All":
+        pass # In a full app, implement filtering logic here
+        
+    for item in filtered_news[:10]:
+        badge = "news-official" if item["source_type"] == "OFFICIAL" else "news-secondary"
+        st.markdown(
+            f"""
+            <div class="news-item" style="background-color: rgba(15,30,39,0.5); padding: 10px; border-radius: 5px;">
+                <span class="{badge}">{item['source_type']}</span> <span style="font-size: 0.8em; color: #8b949e;">{item['time'][:16]}</span><br>
+                <a href="{item['url']}" target="_blank" style="color: #c9d1d9; text-decoration: none;"><b>{item['title']}</b></a><br>
+                <span style="font-size: 0.9em; color: #8b949e;">{item['publisher']}</span>
+            </div>
+            """, unsafe_allow_html=True
+        )
+
+def page_ai_analyst(hydro, weather, wqi, runoff, news, alerts):
+    st.title("AI Analyst & Risk")
+    st.caption("Automated risk analysis and natural language interrogation.")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
         st.markdown("### Active Alerts")
         if alerts:
             for alert in alerts:
                 st.error(f"**{alert['severity']}**: {alert['message']}")
         else:
-            st.success("No active environmental alerts.")
+            st.success("No active environmental alerts detected in the database.")
+            
+        st.markdown("### Risk Breakdown")
+        st.markdown("""
+        * **Water Stress:** 0/100 (No Official Data)
+        * **Flood/Surplus:** Evaluated via Weather/News
+        * **Water Quality:** 0/100 (No Official Data)
+        * **Runoff/Pollution:** Linked to Precipitation
+        """)
         
-        st.caption("Prototype environmental risk classification. Refer to official standards and field measurements for regulatory decisions.")
+    with col2:
+        st.markdown("### AI Environmental Analyst")
+        st.markdown("Tools Available: `Reservoir`, `Weather`, `Satellite`, `History`, `Alerts`")
+        
+        user_input = st.text_input("Ask a question about the current environmental state:")
+        if user_input:
+            agent = HydroAgent()
+            with st.spinner("Agent is analyzing tools and building evidence..."):
+                response = agent.process_query(user_input)
+                st.info(response)
 
 def main():
-    render_sidebar()
-    render_dashboard()
+    page = render_sidebar()
+    hydro, weather, wqi, runoff, news, alerts = fetch_dashboard_data(news_limit=20)
+    
+    if page == "Mission Control":
+        page_mission_control(hydro, weather, wqi, runoff, news, alerts)
+    elif page == "Environmental Intelligence":
+        page_environmental_intelligence(hydro, weather, wqi, runoff, news, alerts)
+    elif page == "AI Analyst & Risk":
+        page_ai_analyst(hydro, weather, wqi, runoff, news, alerts)
 
 if __name__ == "__main__":
     main()

@@ -63,6 +63,11 @@ def fetch_news(query: str) -> List[Dict]:
             
             item_id = hashlib.sha256(link.encode()).hexdigest()
             
+            # Strict relevance filter
+            title_lower = title.lower()
+            if not any(k in title_lower for k in ["bhavani", "erode", "tamil nadu", "mett", "coimbatore", "tiruppur", "nilgiris"]):
+                continue
+
             items.append({
                 'id': item_id,
                 'title': title,
