@@ -14,7 +14,8 @@ sys.path.append(str(BASE_DIR))
 
 from config.settings import APP_NAME, APP_SUBTITLE
 from config.locations import BHAVANISAGAR_DAM
-from database.db import execute_query
+from database.db import execute_query, init_db
+from scripts.orchestrator import run_pipeline
 from agent.agent import HydroAgent
 
 # --- Page Config ---
@@ -280,6 +281,17 @@ def main():
     if "page" not in st.session_state:
         st.session_state.page = "Mission Control"
         
+    init_db()
+    
+    try:
+        check = execute_query("SELECT COUNT(*) as count FROM observations")
+        if not check or check[0]['count'] == 0:
+            with st.spinner("Initializing system and fetching live intelligence..."):
+                run_pipeline()
+    except Exception:
+        with st.spinner("Initializing system and fetching live intelligence..."):
+            run_pipeline()
+            
     render_sidebar()
     hydro, weather, wqi, news, alerts = fetch_dashboard_data(news_limit=20)
     
