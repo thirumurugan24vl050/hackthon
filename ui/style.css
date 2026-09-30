@@ -233,3 +233,76 @@ h2, h3, h4 {
     background-color: rgba(15, 30, 39, 0.72) !important;
     color: #F8FAFC !important;
 }
+
+/* Glass Highlight */
+.metric-card::after, .panel::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: radial-gradient(circle at top right, rgba(54, 214, 232, 0.05), transparent 60%);
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Water Bubble Effect */
+.bubble-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.bubble {
+    position: absolute;
+    bottom: -20px;
+    background-color: rgba(148, 163, 184, 0.15);
+    border-radius: 50%;
+    animation: rise infinite ease-in;
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+}
+
+.bubble:nth-child(1) { width: 12px; height: 12px; left: 10%; animation-duration: 12s; animation-delay: 0s; }
+.bubble:nth-child(2) { width: 18px; height: 18px; left: 30%; animation-duration: 15s; animation-delay: 2s; }
+.bubble:nth-child(3) { width: 8px;  height: 8px;  left: 45%; animation-duration: 10s; animation-delay: 4s; }
+.bubble:nth-child(4) { width: 14px; height: 14px; left: 65%; animation-duration: 14s; animation-delay: 1s; }
+.bubble:nth-child(5) { width: 6px;  height: 6px;  left: 80%; animation-duration: 8s;  animation-delay: 5s; }
+.bubble:nth-child(6) { width: 16px; height: 16px; left: 20%; animation-duration: 16s; animation-delay: 3s; }
+.bubble:nth-child(7) { width: 10px; height: 10px; left: 85%; animation-duration: 11s; animation-delay: 7s; }
+.bubble:nth-child(8) { width: 5px;  height: 5px;  left: 55%; animation-duration: 9s;  animation-delay: 6s; }
+
+@keyframes rise {
+    0% {
+        bottom: -20px;
+        transform: translateX(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    50% {
+        transform: translateX(15px);
+    }
+    90% {
+        opacity: 0.8;
+    }
+    100% {
+        bottom: 110vh;
+        transform: translateX(-15px);
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bubble {
+        animation: none;
+        display: none;
+    }
+}

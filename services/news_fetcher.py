@@ -98,17 +98,76 @@ def fetch_news(query: str) -> List[Dict]:
         print(f"Error fetching news for {query}: {e}")
         return []
 
+def fetch_gdelt(query: str) -> List[Dict]:
+    """Fetches news from GDELT DOC 2.0 API as a fallback."""
+    encoded_query = urllib.parse.quote(query)
+    url = f"https://api.gdeltproject.org/api/v2/doc/doc?query={encoded_query}&mode=artlist&format=json"
+    
+    items = []
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code != 200:
+            return []
+            
+        data = response.json()
+        articles = data.get("articles", [])
+        
+        for art in articles:
+            title = art.get("title", "")
+            link = art.get("url", "")
+            seendate = art.get("seendate", "")
+            domain = art.get("domain", "")
+            
+            # GDELT date format: YYYYMMDDTHHMMSSZ
+            try:
+                dt = datetime.strptime(seendate, "%Y%m%dT%H%M%SZ")
+                iso_pub = dt.replace(tzinfo=timezone.utc).isoformat()
+            except Exception:
+                iso_pub = datetime.now(timezone.utc).isoformat()
+                
+            item_id = hashlib.sha256(link.encode()).hexdigest()
+            source_type = "DISCOVERY_ONLY"
+            
+            # Strict relevance filter
+            title_lower = title.lower()
+            locations = ["bhavanisagar", "bhavanisagar dam", "lower bhavani", "bhavani river", "erode", "sathyamangalam", "tamil nadu"]
+            topics = ["reservoir", "dam", "water", "rainfall", "flood", "release", "surplus", "pollution", "water quality", "irrigation", "storage", "inflow", "outflow", "drought"]
+            
+            if not (any(loc in title_lower for loc in locations) and any(topic in title_lower for topic in topics)):
+                continue
+
+            items.append({
+                'id': item_id,
+                'title': title,
+                'url': link,
+                'publisher': domain,
+                'source_domain': domain,
+                'source_type': source_type,
+                'published_at_utc': iso_pub,
+                'query': query,
+                'category': 'ENVIRONMENTAL'
+            })
+            
+        return items
+    except Exception as e:
+        print(f"Error fetching GDELT for {query}: {e}")
+        return []
+
 import concurrent.futures
 
 def run_all_fetches():
-    """Iterates through all queries, fetches news in parallel, and saves to DB."""
+    """Iterates through all queries, fetches news (Google + GDELT) in parallel, and saves to DB."""
     queries = NEWS_CONFIG.get('search_queries', [])
     all_results = []
     now_utc = datetime.now(timezone.utc).isoformat()
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        future_to_query = {executor.submit(fetch_news, q): q for q in queries}
-        for future in concurrent.futures.as_completed(future_to_query):
+        futures = []
+        for q in queries:
+            futures.append(executor.submit(fetch_news, q))
+            futures.append(executor.submit(fetch_gdelt, q))
+            
+        for future in concurrent.futures.as_completed(futures):
             results = future.result()
             if results:
                 all_results.extend(results)

@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR))
 
 from services.weather_fetcher import fetch_current_weather
-from services.hydrology_fetcher import fetch_reservoir_status
+from services.hydrology_fetcher import fetch_reservoir_status, fetch_open_meteo_flood
 from services.wqi_calculator import calculate_wqi
 from services.news_fetcher import run_all_fetches
 from services.risk_engine import evaluate_risk
@@ -24,15 +24,27 @@ def run_pipeline():
     weather = fetch_current_weather()
     print(f"Weather Status: {weather.get('status')}")
     
-    print("2. Fetching Hydrology Data...")
+    print("2. Fetching Hydrology Data (Reservoir & Flood)...")
     hydrology = fetch_reservoir_status()
-    print(f"Hydrology Status: {hydrology.get('status')} - {hydrology.get('reason')}")
+    print(f"Reservoir Status: {hydrology.get('status')} - {hydrology.get('reason')}")
+    
+    flood = fetch_open_meteo_flood()
+    print(f"Flood Status: {flood.get('status')}")
+    
+    # Merge hydrology and flood data for the risk engine
+    hydrology.update({
+        "flood_status": flood.get("status"),
+        "discharge_m3s": flood.get("discharge_m3s"),
+        "mean_m3s": flood.get("mean_m3s"),
+        "max_m3s": flood.get("max_m3s"),
+        "min_m3s": flood.get("min_m3s")
+    })
     
     print("3. Fetching Water Quality Data...")
-    wqi = calculate_wqi({})
+    wqi = calculate_wqi()
     print(f"WQI Status: {wqi.get('status')}")
     
-    print("4. Fetching News Intelligence (Google News)...")
+    print("4. Fetching News Intelligence (Google News & GDELT)...")
     # Fetching news takes time, so we just run the active fetcher
     news_events = run_all_fetches()
     print(f"News Events Fetched: {len(news_events)}")

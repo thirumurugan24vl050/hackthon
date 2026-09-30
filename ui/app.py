@@ -8,7 +8,7 @@ import streamlit as st
 import folium
 import streamlit.components.v1 as components
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 # Add project root to path
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,8 +24,20 @@ from agent.agent import HydroAgent
 st.set_page_config(
     page_title=APP_NAME,
     page_icon="📡",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
+
+# HTML for water bubble background
+def inject_water_bubbles():
+    html = """
+    <div class="bubble-container">
+        <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        <div class="bubble"></div><div class="bubble"></div>
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
 
 # Load CSS
 css_path = BASE_DIR / "ui" / "style.css"
@@ -35,33 +47,83 @@ if css_path.exists():
 
 # Data Fetching
 @st.cache_data(ttl=60)
-def fetch_dashboard_data(news_limit=30):
-    hydro_data = {"status": "UNAVAILABLE", "storage": "NOT SCORED"}
-    wqi_data = {"status": "UNAVAILABLE", "score": "NOT SCORED"}
+def fetch_dashboard_data(news_limit=30, mode="LIVE"):
+    # If mode is DEMO_SNAPSHOT, return mock data
+    if mode == "DEMO_SNAPSHOT":
+        return get_demo_snapshot_data(news_limit)
+
+    # 1. Hydrology (Reservoir + Flood)
+    hydro_data = {"status": "UNAVAILABLE", "reason": "No data", "level_ft": "--", "storage_mcft": "--", "inflow_cusecs": "--", "outflow_cusecs": "--", "capacity_mcft": 32800, "storage_pct": "--", "discharge_m3s": "--", "flood_status": "UNAVAILABLE"}
     
-    # Weather
-    w_rows = execute_query(
-        "SELECT parameter, value, status FROM observations WHERE source = 'Open-Meteo' ORDER BY timestamp_utc DESC LIMIT 10"
+    # Try fetching latest hydrology observations
+    h_rows = execute_query(
+        "SELECT parameter, value, status, timestamp_ist, source FROM observations WHERE station_id = ? AND source IN ('TN AgriNet', 'Open-Meteo') ORDER BY timestamp_utc DESC LIMIT 20",
+        (BHAVANISAGAR_DAM["id"],)
     )
-    weather_data = {"status": "UNAVAILABLE", "precip": "--", "temp": "--", "wind": "--"}
+    if h_rows:
+        h_vals = {}
+        for r in h_rows:
+            if r["parameter"] not in h_vals:
+                h_vals[r["parameter"]] = r
+        
+        if "level_ft" in h_vals:
+            hydro_data["level_ft"] = h_vals["level_ft"]["value"]
+            hydro_data["status"] = h_vals["level_ft"]["status"]
+            hydro_data["reason"] = f"Scraped from {h_vals['level_ft']['source']}"
+            hydro_data["last_updated"] = h_vals["level_ft"]["timestamp_ist"]
+        if "storage_mcft" in h_vals:
+            hydro_data["storage_mcft"] = h_vals["storage_mcft"]["value"]
+            if hydro_data["storage_mcft"] != "--" and hydro_data["capacity_mcft"] > 0:
+                hydro_data["storage_pct"] = round((float(hydro_data["storage_mcft"]) / hydro_data["capacity_mcft"]) * 100, 2)
+        if "inflow_cusecs" in h_vals: hydro_data["inflow_cusecs"] = h_vals["inflow_cusecs"]["value"]
+        if "outflow_cusecs" in h_vals: hydro_data["outflow_cusecs"] = h_vals["outflow_cusecs"]["value"]
+        if "discharge_m3s" in h_vals: 
+            hydro_data["discharge_m3s"] = h_vals["discharge_m3s"]["value"]
+            hydro_data["flood_status"] = h_vals["discharge_m3s"]["status"]
+
+    # 2. Water Quality
+    # In live system without telemetry, we only have PUBLIC_LATEST classification.
+    wqi_data = {
+        "status": "PUBLIC_LATEST",
+        "station": "Bhavani Sagar",
+        "class": "Category 'B' (Outdoor Bathing Organized)",
+        "report_period": "2023-2024",
+        "source": "TNPCB",
+        "category": "B",
+        "risk": "NORMAL",
+        "score": "NOT SCORED"
+    }
+
+    # 3. Weather
+    w_rows = execute_query(
+        "SELECT parameter, value, status, timestamp_ist FROM observations WHERE source = 'Open-Meteo' ORDER BY timestamp_utc DESC LIMIT 20"
+    )
+    weather_data = {"status": "UNAVAILABLE", "precip": "--", "temp": "--", "wind": "--", "humidity": "--", "pressure": "--"}
     if w_rows:
         has_values = False
         for r in w_rows:
-            if r["parameter"] == "precipitation" and r["value"] != "--": 
+            if r["parameter"] == "precipitation" and r["value"] != "--" and weather_data["precip"] == "--": 
                 weather_data["precip"] = r["value"]
                 has_values = True
-            elif r["parameter"] == "temperature_2m" and r["value"] != "--": 
+            elif r["parameter"] == "temperature_2m" and r["value"] != "--" and weather_data["temp"] == "--": 
                 weather_data["temp"] = r["value"]
                 has_values = True
-            elif r["parameter"] == "wind_speed_10m" and r["value"] != "--": 
+            elif r["parameter"] == "wind_speed_10m" and r["value"] != "--" and weather_data["wind"] == "--": 
                 weather_data["wind"] = r["value"]
                 has_values = True
+            elif r["parameter"] == "relative_humidity_2m" and r["value"] != "--" and weather_data["humidity"] == "--": 
+                weather_data["humidity"] = r["value"]
+            elif r["parameter"] == "surface_pressure" and r["value"] != "--" and weather_data["pressure"] == "--": 
+                weather_data["pressure"] = r["value"]
+            
+            if "last_updated" not in weather_data and has_values:
+                weather_data["last_updated"] = r["timestamp_ist"]
         
         weather_data["status"] = "LIVE" if has_values else "UNAVAILABLE"
             
-    # News - deduplicate
+    # 4. News
     raw_news = execute_query(
-        "SELECT title, url, publisher, source_type, published_at_utc as time, category FROM news_items WHERE status = 'ACTIVE' ORDER BY published_at_utc DESC LIMIT 100"
+        "SELECT title, url, publisher, source_type, published_at_utc as time, category FROM news_items WHERE status = 'ACTIVE' ORDER BY published_at_utc DESC LIMIT 150"
     )
     
     news = []
@@ -79,7 +141,7 @@ def fetch_dashboard_data(news_limit=30):
                 if len(news) >= news_limit:
                     break
     
-    # Alerts - deduplicate
+    # 5. Alerts
     raw_alerts = execute_query(
         "SELECT hazard_category, severity, message, evidence, created_at FROM alerts WHERE is_active = 1 ORDER BY created_at DESC LIMIT 50"
     )
@@ -98,6 +160,28 @@ def fetch_dashboard_data(news_limit=30):
                     break
     
     return hydro_data, weather_data, wqi_data, news, alerts
+
+def get_demo_snapshot_data(news_limit):
+    """Returns static DEMO snapshot data."""
+    hydro = {
+        "status": "DEMO_SNAPSHOT", "reason": "Demo Snapshot Mode",
+        "level_ft": 53.02, "storage_mcft": 5198, "inflow_cusecs": 58, "outflow_cusecs": 555,
+        "capacity_mcft": 32800, "storage_pct": 15.85, "discharge_m3s": 15.2, "flood_status": "DEMO_SNAPSHOT",
+        "last_updated": "2026-07-06T12:00:00Z"
+    }
+    weather = {
+        "status": "DEMO_SNAPSHOT", "precip": 12.5, "temp": 28.4, "wind": 14.2, "humidity": 75, "pressure": 1008.2, "last_updated": "2026-07-06T12:00:00Z"
+    }
+    wqi = {
+        "status": "DEMO_SNAPSHOT", "station": "Bhavani Sagar", "class": "Category 'B'", "report_period": "2023-2024", "source": "TNPCB", "category": "B", "risk": "NORMAL", "score": "NOT SCORED"
+    }
+    news = [
+        {"title": "Bhavanisagar dam water level stands at 53 feet", "publisher": "The Hindu", "url": "#", "source_type": "SECONDARY", "time": datetime.now(timezone.utc).isoformat(), "category": "ENVIRONMENTAL"}
+    ]
+    alerts = [
+        {"hazard_category": "RUNOFF / POLLUTION", "severity": "WATCH", "message": "Heavy rainfall expected to increase inflow.", "evidence": "['Forecast: 12.5mm']", "created_at": datetime.now(timezone.utc).isoformat()}
+    ]
+    return hydro, weather, wqi, news, alerts
 
 def render_sidebar():
     with st.sidebar:
@@ -157,21 +241,35 @@ def render_hazard_card(title, data_status, score_val, band, reason):
     '''
     st.markdown(html, unsafe_allow_html=True)
 
-def render_top_bar():
+def render_top_bar(hydro, weather, wqi):
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    st.markdown(f'''
-    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid rgba(148,163,184,0.14);">
-        <div>
-            <span style="font-weight: 700; color: #F8FAFC;">HYDRO MIND</span> <span style="color: #94A3B8;">| Bhavanisagar Dam • Erode, Tamil Nadu</span>
+    
+    # Determine aggregate health for top indicator
+    aggregate_live = any(x["status"] == "LIVE" for x in [weather, hydro])
+    
+    mode = st.session_state.data_mode
+    mode_label = "LIVE" if aggregate_live and mode == "LIVE" else mode.replace("_", " ")
+    badge = "badge-live" if mode_label == "LIVE" else ("badge-official" if mode == "PUBLIC_LATEST" else "badge-secondary")
+    
+    col1, col2 = st.columns([7, 3])
+    with col1:
+        st.markdown(f'''
+        <div style="display: flex; align-items: center; padding-bottom: 24px;">
+            <span style="font-weight: 700; color: #F8FAFC; font-size: 20px;">HYDRO MIND</span> 
+            <span style="color: #94A3B8; margin-left: 8px;">| Bhavanisagar Dam • Erode, Tamil Nadu</span>
         </div>
-        <div style="font-size: 13px; color: #94A3B8;">
-            <span class="status-badge badge-live" style="margin-right: 12px;">LIVE</span> Last updated: {now_str}
+        ''', unsafe_allow_html=True)
+    with col2:
+        st.markdown(f'''
+        <div style="text-align: right; font-size: 13px; color: #94A3B8; padding-bottom: 24px;">
+            <span class="status-badge {badge}" style="margin-right: 12px;">{mode_label}</span> Last updated: {now_str}
         </div>
-    </div>
-    ''', unsafe_allow_html=True)
+        ''', unsafe_allow_html=True)
+    
+    st.markdown('<div style="border-bottom: 1px solid rgba(148,163,184,0.14); margin-bottom: 24px; margin-top: -16px;"></div>', unsafe_allow_html=True)
 
 def page_mission_control(hydro, weather, wqi, news, alerts):
-    render_top_bar()
+    render_top_bar(hydro, weather, wqi)
     st.markdown("<div class='eyebrow'>ENVIRONMENTAL OPERATIONS</div>", unsafe_allow_html=True)
     st.markdown("<h1>MISSION CONTROL</h1>", unsafe_allow_html=True)
     st.markdown("<div class='page-subtitle'>High-level environmental overview of Bhavanisagar Dam and the Lower Bhavani River.</div>", unsafe_allow_html=True)
@@ -181,57 +279,106 @@ def page_mission_control(hydro, weather, wqi, news, alerts):
     run_band = "NORMAL"
     run_reason = "No precipitation or news anomaly detected"
     
-    if weather["status"] == "LIVE" and weather["precip"] != "--" and float(weather["precip"]) > 20.0:
+    if weather["status"] != "UNAVAILABLE" and weather["precip"] != "--" and float(weather["precip"]) > 20.0:
         run_score = "55 / 100"
         run_status = "SCORED"
         run_band = "WATCH"
         run_reason = f"Heavy rainfall detected: {weather['precip']} mm"
+        
+    water_stress_status = "NOT SCORED"
+    water_stress_score = "--"
+    water_stress_band = "NORMAL"
+    water_stress_reason = "Missing reservoir capacity metric"
+    if hydro["status"] != "UNAVAILABLE" and hydro.get("storage_pct") != "--":
+        water_stress_status = "SCORED"
+        if hydro["storage_pct"] < 20:
+            water_stress_score = "75 / 100"
+            water_stress_band = "ELEVATED"
+            water_stress_reason = f"Storage critically low ({hydro['storage_pct']}%)"
+        else:
+            water_stress_score = "20 / 100"
+            water_stress_band = "NORMAL"
+            water_stress_reason = f"Storage nominal ({hydro['storage_pct']}%)"
+            
+    flood_status = "NOT SCORED"
+    flood_score = "--"
+    flood_band = "NORMAL"
+    flood_reason = "No official telemetry"
+    if hydro["flood_status"] != "UNAVAILABLE" and hydro.get("discharge_m3s") != "--":
+        flood_status = "SCORED"
+        val = float(hydro["discharge_m3s"])
+        if val > 100:
+            flood_score = "60 / 100"
+            flood_band = "WATCH"
+            flood_reason = f"Model discharge {val} m³/s"
+        else:
+            flood_score = "10 / 100"
+            flood_band = "NORMAL"
+            flood_reason = f"Model discharge {val} m³/s"
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        render_hazard_card("Water Stress", "NOT SCORED", "--", "NORMAL", "No official hydrology data available")
+        render_hazard_card("Water Stress", water_stress_status, water_stress_score, water_stress_band, water_stress_reason)
     with col2:
-        render_hazard_card("Flood / Surplus", "NOT SCORED", "--", "NORMAL", "No official inflow data available")
+        render_hazard_card("Flood / Surplus", flood_status, flood_score, flood_band, flood_reason)
     with col3:
-        render_hazard_card("Water Quality", "NOT SCORED", "--", "NORMAL", "No current observation")
+        render_hazard_card("Water Quality", wqi["status"], wqi["score"], wqi["risk"], f"Class {wqi['category']} ({wqi['report_period']})")
     with col4:
         render_hazard_card("Runoff / Pollution", run_status, run_score, run_band, run_reason)
 
     st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
     
     st.markdown("<h3>Reservoir Status</h3>", unsafe_allow_html=True)
-    st.markdown('''
+    h_level = f"{hydro['level_ft']} ft" if hydro['level_ft'] != "--" else "N/A"
+    h_storage = f"{hydro['storage_mcft']} MCft" if hydro['storage_mcft'] != "--" else "N/A"
+    h_inflow = f"{hydro['inflow_cusecs']} cusecs" if hydro['inflow_cusecs'] != "--" else "N/A"
+    h_outflow = f"{hydro['outflow_cusecs']} cusecs" if hydro['outflow_cusecs'] != "--" else "N/A"
+    h_net = "N/A"
+    if hydro['inflow_cusecs'] != "--" and hydro['outflow_cusecs'] != "--":
+        h_net = f"{float(hydro['inflow_cusecs']) - float(hydro['outflow_cusecs'])} cusecs"
+    
+    h_badge = _get_badge_class(hydro['status'])
+    
+    st.markdown(f'''
     <div class="matrix-grid">
-        <div class="matrix-cell"><div class="matrix-label">LEVEL</div><div class="matrix-value" style="color: #94A3B8;">N/A</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge badge-unavail">UNAVAILABLE</span></div></div>
-        <div class="matrix-cell"><div class="matrix-label">STORAGE</div><div class="matrix-value" style="color: #94A3B8;">N/A</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge badge-unavail">UNAVAILABLE</span></div></div>
-        <div class="matrix-cell"><div class="matrix-label">INFLOW</div><div class="matrix-value" style="color: #94A3B8;">N/A</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge badge-unavail">UNAVAILABLE</span></div></div>
-        <div class="matrix-cell"><div class="matrix-label">OUTFLOW</div><div class="matrix-value" style="color: #94A3B8;">N/A</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge badge-unavail">UNAVAILABLE</span></div></div>
-        <div class="matrix-cell"><div class="matrix-label">24H_LEVEL_CHANGE</div><div class="matrix-value" style="color: #94A3B8;">N/A</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge badge-unavail">UNAVAILABLE</span></div></div>
+        <div class="matrix-cell"><div class="matrix-label">LEVEL</div><div class="matrix-value" style="color: #F8FAFC;">{h_level}</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge {h_badge}">{hydro['status']}</span></div></div>
+        <div class="matrix-cell"><div class="matrix-label">STORAGE</div><div class="matrix-value" style="color: #F8FAFC;">{h_storage}</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge {h_badge}">{hydro['status']}</span></div></div>
+        <div class="matrix-cell"><div class="matrix-label">INFLOW</div><div class="matrix-value" style="color: #F8FAFC;">{h_inflow}</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge {h_badge}">{hydro['status']}</span></div></div>
+        <div class="matrix-cell"><div class="matrix-label">OUTFLOW</div><div class="matrix-value" style="color: #F8FAFC;">{h_outflow}</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge {h_badge}">{hydro['status']}</span></div></div>
+        <div class="matrix-cell"><div class="matrix-label">NET FLOW</div><div class="matrix-value" style="color: #F8FAFC;">{h_net}</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge {h_badge}">{hydro['status']}</span></div></div>
     </div>
     ''', unsafe_allow_html=True)
-    st.markdown("<div style='font-size: 12px; color: #94A3B8; margin-top: 8px;'>Official hydrology data unavailable.</div>", unsafe_allow_html=True)
+    if hydro['status'] != "UNAVAILABLE":
+        st.markdown(f"<div style='font-size: 12px; color: #94A3B8; margin-top: 8px;'>Source: {hydro['reason']} (Updated: {hydro.get('last_updated', 'Unknown')})</div>", unsafe_allow_html=True)
     
     st.markdown("<div style='height: 32px;'></div>", unsafe_allow_html=True)
     
     colA, colB = st.columns([6, 4])
     with colA:
         st.markdown("<h3>Environmental Map</h3>", unsafe_allow_html=True)
-        m = folium.Map(location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], zoom_start=14, tiles="OpenStreetMap")
+        m = folium.Map(location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], zoom_start=13, tiles="OpenStreetMap")
         folium.Marker(
             [BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']],
             popup=str(BHAVANISAGAR_DAM['name']),
             tooltip="Bhavanisagar Dam"
         ).add_to(m)
         components.html(m._repr_html_(), height=450)
+        st.markdown("<div style='font-size:11px; color:#94A3B8; text-align:right;'>© OpenStreetMap contributors</div>", unsafe_allow_html=True)
 
     with colB:
-        st.markdown("<h3>Top Contributing Evidence</h3>", unsafe_allow_html=True)
-        st.markdown("""
+        st.markdown("<h3>Recent Activity</h3>", unsafe_allow_html=True)
+        logs_html = ""
+        if not alerts and weather['status'] == "UNAVAILABLE" and hydro['status'] == "UNAVAILABLE":
+            logs_html = "<li>No new environmental events since last refresh.</li>"
+        else:
+            if weather['status'] != "UNAVAILABLE": logs_html += "<li>Weather telemetry refreshed successfully.</li>"
+            if hydro['status'] != "UNAVAILABLE": logs_html += "<li>Reservoir status updated from official sources.</li>"
+            if alerts: logs_html += f"<li>{len(alerts)} alerts generated in current evaluation window.</li>"
+            
+        st.markdown(f"""
         <div class="panel">
             <ul style="color: #CBD5E1; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
-                <li>Official hydrology feeds are currently offline, preventing core volumetric assessment.</li>
-                <li>Live weather telemetry indicates no immediate precipitation threat.</li>
-                <li>News sentiment remains baseline with no flood indicators.</li>
+                {logs_html}
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -245,18 +392,40 @@ def page_mission_control(hydro, weather, wqi, news, alerts):
             <div class="panel" style="text-align: center; color: #94A3B8;">
                 <div style="margin-bottom: 8px;">✅</div>
                 <div style="font-weight: 600;">NO ACTIVE ENVIRONMENTAL ALERTS</div>
-                <div style="font-size: 13px;">All monitored conditions currently below configured alert criteria.</div>
+                <div style="font-size: 13px;">All monitored conditions are currently below configured alert criteria.</div>
             </div>
             """, unsafe_allow_html=True)
 
 def page_environmental_intelligence(hydro, weather, wqi, news, alerts):
-    render_top_bar()
+    render_top_bar(hydro, weather, wqi)
     st.markdown("<div class='eyebrow'>INTELLIGENCE FEED</div>", unsafe_allow_html=True)
     st.markdown("<h1>ENVIRONMENTAL INTELLIGENCE</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='page-subtitle'>Live external information and environmental indicators relevant to Bhavanisagar and the Lower Bhavani River.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='page-subtitle'>Public environmental evidence, weather telemetry, satellite imagery and external information.</div>", unsafe_allow_html=True)
     
-    st.markdown("<h3>Official Updates</h3>", unsafe_allow_html=True)
-    st.info("Awaiting official connection restore from CWC and TN-WRD. Fallback to secondary intelligence enabled.")
+    st.markdown("<h3>Water Quality</h3>", unsafe_allow_html=True)
+    w_badge = _get_badge_class(wqi['status'])
+    st.markdown(f'''
+    <div class="panel">
+        <div style="display:flex; justify-content:space-between; margin-bottom: 12px;">
+            <span style="font-size: 11px; font-weight:700; color:#36D6E8;">LATEST PUBLISHED CLASSIFICATION</span>
+            <span class="status-badge {w_badge}">{wqi['status']}</span>
+        </div>
+        <table style="width: 100%; text-align: left; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid rgba(148,163,184,0.14);">
+                <th style="padding: 8px;">Parameter</th><th style="padding: 8px;">Value</th><th style="padding: 8px;">Unit</th><th style="padding: 8px;">Sample Date</th><th style="padding: 8px;">Source</th>
+            </tr>
+            <tr>
+                <td style="padding: 8px;">Classification</td><td style="padding: 8px;">{wqi.get("class", "N/A")}</td><td style="padding: 8px;">-</td><td style="padding: 8px;">{wqi.get("report_period", "N/A")}</td><td style="padding: 8px;">TNPCB</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px;">pH</td><td style="padding: 8px;">N/A</td><td style="padding: 8px;">-</td><td style="padding: 8px;">N/A</td><td style="padding: 8px;">-</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px;">DO</td><td style="padding: 8px;">N/A</td><td style="padding: 8px;">mg/L</td><td style="padding: 8px;">N/A</td><td style="padding: 8px;">-</td>
+            </tr>
+        </table>
+    </div>
+    ''', unsafe_allow_html=True)
     
     st.markdown("<h3 style='margin-top:32px;'>Weather Telemetry</h3>", unsafe_allow_html=True)
     
@@ -264,32 +433,74 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts):
     temp_val = f"{weather['temp']} °C" if weather['temp'] != "--" else "--"
     wind_val = f"{weather['wind']} km/h" if weather['wind'] != "--" else "--"
     
+    wb = _get_badge_class(weather["status"])
     st.markdown(f'''
     <div class="matrix-grid" style="grid-template-columns: repeat(3, 1fr);">
-        <div class="matrix-cell"><div class="matrix-label">PRECIPITATION</div><div class="matrix-value">{precip_val}</div></div>
-        <div class="matrix-cell"><div class="matrix-label">TEMPERATURE</div><div class="matrix-value">{temp_val}</div></div>
-        <div class="matrix-cell"><div class="matrix-label">WIND SPEED</div><div class="matrix-value">{wind_val}</div></div>
+        <div class="matrix-cell"><div class="matrix-label">PRECIPITATION</div><div class="matrix-value">{precip_val}</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge {wb}">{weather["status"]}</span> Source: Open-Meteo</div></div>
+        <div class="matrix-cell"><div class="matrix-label">TEMPERATURE</div><div class="matrix-value">{temp_val}</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge {wb}">{weather["status"]}</span></div></div>
+        <div class="matrix-cell"><div class="matrix-label">WIND SPEED</div><div class="matrix-value">{wind_val}</div><div style="font-size: 11px; margin-top:4px; color:#94A3B8;"><span class="status-badge {wb}">{weather["status"]}</span></div></div>
     </div>
     ''', unsafe_allow_html=True)
     
-    st.markdown("<h3 style='margin-top:32px;'>Satellite Indicators</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='margin-top:32px;'>Satellite Observation</h3>", unsafe_allow_html=True)
     st.markdown('''
-    <div class="matrix-grid" style="grid-template-columns: repeat(3, 1fr);">
-        <div class="matrix-cell"><div class="matrix-label">NDWI (WATER EXTENT)</div><div class="matrix-value" style="color:#94A3B8;">UNAVAILABLE</div></div>
-        <div class="matrix-cell"><div class="matrix-label">NDVI (VEGETATION)</div><div class="matrix-value" style="color:#94A3B8;">UNAVAILABLE</div></div>
-        <div class="matrix-cell"><div class="matrix-label">CLOUD COVER</div><div class="matrix-value" style="color:#94A3B8;">UNAVAILABLE</div></div>
+    <div style="display:flex; justify-content:space-between; margin-bottom: 12px; margin-top: 12px;">
+        <span style="font-size: 11px; font-weight:700; color:#36D6E8;">NASA GIBS SATELLITE IMAGERY</span>
+        <span class="status-badge badge-live">AVAILABLE</span>
     </div>
     ''', unsafe_allow_html=True)
     
-    st.markdown("<h3 style='margin-top:32px;'>Google News Discovery</h3>", unsafe_allow_html=True)
+    colS1, colS2 = st.columns([7, 3])
+    with colS1:
+        # Use Folium to render a map centered on Bhavanisagar with NASA GIBS layer
+        m_sat = folium.Map(location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], zoom_start=11, tiles=None)
+        
+        # NASA GIBS True Color
+        folium.TileLayer(
+            tiles='https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/current/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg',
+            attr='NASA EOSDIS GIBS',
+            name='NASA GIBS True Color',
+            overlay=True
+        ).add_to(m_sat)
+        
+        components.html(m_sat._repr_html_(), height=400)
+    with colS2:
+        st.markdown('''
+        <div class="panel" style="height: 100%;">
+            <div style="margin-bottom: 16px;">
+                <div class="matrix-label">NDWI (WATER EXTENT)</div>
+                <div class="matrix-value" style="color:#94A3B8;">N/A</div>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <div class="matrix-label">MNDWI</div>
+                <div class="matrix-value" style="color:#94A3B8;">N/A</div>
+            </div>
+            <div>
+                <div class="matrix-label">SOURCE</div>
+                <div class="matrix-value" style="color:#94A3B8; font-size:16px;">NASA GIBS</div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
+    
+    st.markdown("<h3 style='margin-top:32px;'>News Discovery</h3>", unsafe_allow_html=True)
     
     for item in news[:10]:
         badge = _get_badge_class(item["source_type"])
+        # Freshness determination
+        try:
+            pub_dt = datetime.fromisoformat(item['time'].replace('Z', '+00:00'))
+            age_hours = (datetime.now(timezone.utc) - pub_dt).total_seconds() / 3600
+            if age_hours <= 12: freshness = "LATEST"
+            elif age_hours <= 168: freshness = "RECENT"
+            else: freshness = "HISTORICAL"
+        except:
+            freshness = "UNKNOWN"
+            
         st.markdown(
             f'''
             <div class="news-item">
                 <div style="display:flex; justify-content:space-between; margin-bottom: 12px;">
-                    <span class="status-badge {badge}">{item['source_type']}</span>
+                    <div><span class="status-badge {badge}">{item['source_type']}</span> <span style="font-size: 12px; color:#36D6E8; margin-left:8px; font-weight:600;">{freshness}</span></div>
                     <span style="font-size: 12px; color: #94A3B8;">{item['time'][:16]}</span>
                 </div>
                 <div><a href="{item['url']}" target="_blank" style="color: #F8FAFC; text-decoration: none; font-weight: 600; font-size: 15px; line-height: 1.4;">{item['title']}</a></div>
@@ -299,7 +510,7 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts):
         )
 
 def page_ai_analyst(hydro, weather, wqi, news, alerts):
-    render_top_bar()
+    render_top_bar(hydro, weather, wqi)
     st.markdown("<div class='eyebrow'>ANALYSIS & DECISION SUPPORT</div>", unsafe_allow_html=True)
     st.markdown("<h1>AI ANALYST & RISK</h1>", unsafe_allow_html=True)
     st.markdown("<div class='page-subtitle'>AI-assisted environmental analysis using reservoir, weather, satellite, historical, alert and external information.</div>", unsafe_allow_html=True)
@@ -308,34 +519,55 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts):
     
     with col1:
         st.markdown("<h3>Risk Breakdown</h3>", unsafe_allow_html=True)
-        st.markdown("""
+        
+        ws_badge = _get_badge_class("SCORED") if hydro["status"] != "UNAVAILABLE" else _get_badge_class("UNAVAILABLE")
+        ws_status = "SCORED" if hydro["status"] != "UNAVAILABLE" else "NOT SCORED"
+        
+        fs_badge = _get_badge_class("SCORED") if hydro["flood_status"] != "UNAVAILABLE" else _get_badge_class("UNAVAILABLE")
+        fs_status = "SCORED" if hydro["flood_status"] != "UNAVAILABLE" else "NOT SCORED"
+        
+        wq_badge = _get_badge_class("UNAVAILABLE") # We don't score water quality risk purely on historical category
+        
+        run_badge = _get_badge_class("LIVE")
+        
+        st.markdown(f"""
         <div class="panel">
             <div style="margin-bottom: 20px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-                    <strong style="color:#F8FAFC;">Water Stress</strong> <span class="status-badge badge-unavail">NOT SCORED</span>
+                    <strong style="color:#F8FAFC;">Water Stress</strong> <span class="status-badge {ws_badge}">{ws_status}</span>
                 </div>
-                <div style="font-size: 13px; color: #94A3B8;">Missing Inputs: Hydrology Data</div>
+                <div style="font-size: 13px; color: #94A3B8;">Contributors: Reservoir Storage, Inflow</div>
             </div>
             <div style="margin-bottom: 20px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-                    <strong style="color:#F8FAFC;">Flood / Surplus</strong> <span class="status-badge badge-unavail">NOT SCORED</span>
+                    <strong style="color:#F8FAFC;">Flood / Surplus</strong> <span class="status-badge {fs_badge}">{fs_status}</span>
                 </div>
-                <div style="font-size: 13px; color: #94A3B8;">Missing Inputs: Inflow Feed</div>
+                <div style="font-size: 13px; color: #94A3B8;">Contributors: River Discharge Model</div>
             </div>
             <div style="margin-bottom: 20px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-                    <strong style="color:#F8FAFC;">Water Quality</strong> <span class="status-badge badge-unavail">NOT SCORED</span>
+                    <strong style="color:#F8FAFC;">Water Quality</strong> <span class="status-badge {wq_badge}">NOT SCORED</span>
                 </div>
-                <div style="font-size: 13px; color: #94A3B8;">Missing Inputs: Sensor Node Offline</div>
+                <div style="font-size: 13px; color: #94A3B8;">Data Limitations: Live telemetry offline</div>
             </div>
             <div>
                 <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-                    <strong style="color:#F8FAFC;">Runoff / Pollution</strong> <span class="status-badge badge-live">MONITORING</span>
+                    <strong style="color:#F8FAFC;">Runoff / Pollution</strong> <span class="status-badge {run_badge}">MONITORING</span>
                 </div>
-                <div style="font-size: 13px; color: #94A3B8;">Weather node correlating risk.</div>
+                <div style="font-size: 13px; color: #94A3B8;">Contributors: Weather, Satellite Anomaly</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
+        
+        with st.expander("PUBLIC DATA SOURCES"):
+            st.markdown("""
+            - **Open-Meteo**: Weather + flood model
+            - **Tamil Nadu AgriNet**: Reservoir public data
+            - **TNPCB**: Water quality reports
+            - **NASA GIBS**: Satellite imagery
+            - **OpenStreetMap**: Map basemap
+            - **Google News / GDELT**: News discovery
+            """)
         
         st.markdown("<h3>Active Alerts</h3>", unsafe_allow_html=True)
         if alerts:
@@ -380,11 +612,11 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts):
                     st.markdown("""
                     <div class="panel" style="background-color: rgba(54, 214, 232, 0.05); border-color: rgba(54, 214, 232, 0.2);">
                         <div class="eyebrow" style="margin-bottom: 12px;">Tools Used</div>
-                        <div style="font-size: 13px; color: #CBD5E1; margin-bottom: 16px;">✓ Weather<br>✓ Alerts</div>
+                        <div style="font-size: 13px; color: #CBD5E1; margin-bottom: 16px;">✓ Reservoir<br>✓ Weather<br>✓ Satellite<br>✓ History<br>✓ News<br>✓ Alerts</div>
                         <div class="eyebrow" style="margin-bottom: 12px;">Analysis</div>
                         <div style="color:#F8FAFC; font-size: 14px; line-height: 1.6;">%s</div>
-                        <div class="eyebrow" style="margin-top: 16px; margin-bottom: 12px;">AI Safety Notice</div>
-                        <div style="font-size: 12px; color: #94A3B8; font-style: italic;">The system cannot certify drinking-water safety. Current observations indicate measured conditions. Official laboratory testing and applicable regulatory standards are required.</div>
+                        <div class="eyebrow" style="margin-top: 16px; margin-bottom: 12px;">Data Limitations</div>
+                        <div style="font-size: 12px; color: #94A3B8; font-style: italic;">The AI can only cite values returned from current tools. It does not invent missing telemetry points.</div>
                     </div>
                     """ % response.replace('\n', '<br>'), unsafe_allow_html=True)
 
@@ -408,10 +640,22 @@ def main():
     if "page" not in st.session_state:
         st.session_state.page = "Mission Control"
         
+    if "data_mode" not in st.session_state:
+        st.session_state.data_mode = "LIVE"
+        
     bootstrap_system()
+    inject_water_bubbles()
+    
+    with st.sidebar:
+        st.markdown("<div class='eyebrow'>DATA MODE</div>", unsafe_allow_html=True)
+        st.session_state.data_mode = st.radio(
+            "Data Availability", 
+            ["LIVE", "PUBLIC_LATEST", "DEMO_SNAPSHOT"], 
+            label_visibility="collapsed"
+        )
             
     render_sidebar()
-    hydro, weather, wqi, news, alerts = fetch_dashboard_data(news_limit=30)
+    hydro, weather, wqi, news, alerts = fetch_dashboard_data(news_limit=30, mode=st.session_state.data_mode)
     
     if st.session_state.page == "Mission Control":
         page_mission_control(hydro, weather, wqi, news, alerts)

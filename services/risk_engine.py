@@ -44,7 +44,7 @@ def evaluate_risk(
     
     # 3. Check News Events (Discovery Layer)
     for event in news_events:
-        cat = event.get("category", "").lower()
+        cat = (event.get("category") or "").lower()
         evidence_str = f"News event: {event.get('title')}"
         severity = "ELEVATED" if event.get("corroboration_status") == "CORROBORATED" else "WATCH"
         
