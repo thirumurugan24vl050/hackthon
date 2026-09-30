@@ -14,8 +14,9 @@ sys.path.append(str(BASE_DIR))
 
 from config.settings import APP_NAME, APP_SUBTITLE, APP_VERSION
 from config.locations import BHAVANISAGAR_DAM
-from database.db import execute_query
+from database.db import execute_query, init_db
 from agent.agent import HydroAgent
+from scripts.orchestrator import run_pipeline
 
 # --- Page Config ---
 st.set_page_config(
@@ -73,6 +74,18 @@ st.markdown("""
 
 def fetch_dashboard_data():
     """Fetch all necessary data from the SQLite database."""
+    # Ensure DB is initialized
+    init_db()
+    
+    # If no data exists, run the orchestrator to populate it
+    try:
+        check = execute_query("SELECT COUNT(*) as count FROM observations")
+        if check and check[0]['count'] == 0:
+            with st.spinner("Initializing system and fetching live intelligence..."):
+                run_pipeline()
+    except Exception:
+        pass # Handle table not found before init
+        
     # Hydrology
     hydro_data = {"status": "UNAVAILABLE", "level": "--", "storage": "--", "inflow": "--", "outflow": "--"}
     
