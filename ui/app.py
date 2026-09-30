@@ -17,11 +17,12 @@ from config.locations import BHAVANISAGAR_DAM
 from database.db import execute_query, init_db
 from scripts.orchestrator import run_pipeline
 from agent.agent import HydroAgent
+import threading
 
 # --- Page Config ---
 st.set_page_config(
     page_title=APP_NAME,
-    page_icon="??",
+    page_icon="📡",
     layout="wide"
 )
 
@@ -291,20 +292,27 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts):
                     response = agent.process_query(user_input)
                     st.markdown(f"<div class='panel' style='color:#EAEAEA; font-family: monospace; font-size: 13px; line-height: 1.6;'>{response}</div>", unsafe_allow_html=True)
 
+@st.cache_resource
+def bootstrap_system():
+    init_db()
+    def background_task():
+        try:
+            check = execute_query("SELECT COUNT(*) as count FROM observations")
+            if not check or check[0]['count'] == 0:
+                run_pipeline()
+        except Exception:
+            run_pipeline()
+            
+    thread = threading.Thread(target=background_task)
+    thread.daemon = True
+    thread.start()
+    return True
+
 def main():
     if "page" not in st.session_state:
         st.session_state.page = "Mission Control"
         
-    init_db()
-    
-    try:
-        check = execute_query("SELECT COUNT(*) as count FROM observations")
-        if not check or check[0]['count'] == 0:
-            with st.spinner("Initializing system and fetching live intelligence..."):
-                run_pipeline()
-    except Exception:
-        with st.spinner("Initializing system and fetching live intelligence..."):
-            run_pipeline()
+    bootstrap_system()
             
     render_sidebar()
     hydro, weather, wqi, news, alerts = fetch_dashboard_data(news_limit=20)
