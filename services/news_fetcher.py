@@ -1,14 +1,14 @@
 """
-HYDRO MIND — Google News Intelligence Layer
+HYDRO MIND - Google News Intelligence Layer
 Fetches, parses, and classifies news RSS feeds.
 """
 import urllib.parse
 import xml.etree.ElementTree as ET
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
+import email.utils
 import hashlib
 from typing import List, Dict, Optional
-from datetime import datetime, timezone
 import yaml
 from pathlib import Path
 
@@ -63,10 +63,23 @@ def fetch_news(query: str) -> List[Dict]:
             
             item_id = hashlib.sha256(link.encode()).hexdigest()
             
-            # Strict relevance filter
+            # Strict relevance filter: Location AND Environmental Topic
             title_lower = title.lower()
-            if not any(k in title_lower for k in ["bhavani", "erode", "tamil nadu", "mett", "coimbatore", "tiruppur", "nilgiris"]):
+            
+            locations = ["bhavanisagar", "bhavanisagar dam", "lower bhavani", "bhavani river", "erode", "sathyamangalam", "tamil nadu"]
+            topics = ["reservoir", "dam", "water", "rainfall", "flood", "release", "surplus", "pollution", "water quality", "irrigation", "storage", "inflow", "outflow", "drought"]
+            
+            has_location = any(loc in title_lower for loc in locations)
+            has_topic = any(topic in title_lower for topic in topics)
+            
+            if not (has_location and has_topic):
                 continue
+
+            try:
+                dt = email.utils.parsedate_to_datetime(pub_date)
+                iso_pub = dt.astimezone(timezone.utc).isoformat()
+            except Exception:
+                iso_pub = datetime.now(timezone.utc).isoformat()
 
             items.append({
                 'id': item_id,
@@ -75,8 +88,9 @@ def fetch_news(query: str) -> List[Dict]:
                 'publisher': publisher,
                 'source_domain': domain,
                 'source_type': source_type,
-                'published_at_raw': pub_date,
-                'query': query
+                'published_at_utc': iso_pub,
+                'query': query,
+                'category': 'ENVIRONMENTAL' # Simplified category logic
             })
             
         return items
@@ -95,15 +109,15 @@ def run_all_fetches():
         results = fetch_news(query)
         for item in results:
             execute_query(
-                """
+                '''
                 INSERT OR IGNORE INTO news_items 
-                (id, title, url, publisher, source_domain, published_at_utc, fetched_at_utc, source_type, status, first_seen_at_utc, last_seen_at_utc)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
+                (id, title, url, publisher, source_domain, published_at_utc, fetched_at_utc, source_type, status, category, first_seen_at_utc, last_seen_at_utc)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''',
                 (
                     item['id'], item['title'], item['url'], item['publisher'], 
-                    item['source_domain'], item.get('published_at_raw', now_utc), now_utc, 
-                    item['source_type'], 'ACTIVE', now_utc, now_utc
+                    item['source_domain'], item['published_at_utc'], now_utc, 
+                    item['source_type'], 'ACTIVE', item['category'], now_utc, now_utc
                 ),
                 commit=True
             )

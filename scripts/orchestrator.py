@@ -1,10 +1,11 @@
 """
-HYDRO MIND — Main Data Orchestrator
+HYDRO MIND - Main Data Orchestrator
 Runs all live connectors, evaluates risk, and updates the database.
 """
 import sys
 from pathlib import Path
 import time
+import json
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR))
@@ -43,9 +44,7 @@ def run_pipeline():
     )
     
     risk_assessment = evaluate_risk(hydrology, weather, wqi, recent_news)
-    print(f"Risk Assessment: {risk_assessment['risk_level']}")
-    if risk_assessment['reasons']:
-        print(f"Reasons: {risk_assessment['reasons']}")
+    print("Risk Assessment Complete. Output hazards:", json.dumps(risk_assessment, indent=2))
         
     print("--- Pipeline Execution Complete ---")
 
