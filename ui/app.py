@@ -520,7 +520,8 @@ def render_sidebar(mode, hydro, weather, wqi):
         st.markdown(f"""
         <div style='margin-bottom:24px;'>
             <span style='font-size:22px;font-weight:800;color:#F8FAFC;letter-spacing:-0.05em;'>{APP_NAME}</span><br>
-            <span style='font-size:12px;color:#94A3B8;'>{APP_SUBTITLE}</span>
+            <span style='font-size:12px;color:#94A3B8;'>{APP_SUBTITLE}</span><br>
+            <span style='font-size:10px;color:#36D6E8;margin-top:4px;display:inline-block;'>Created by THIRUMURUGAN.S (SIET)</span>
         </div>""", unsafe_allow_html=True)
 
         st.markdown("<div style='height:1px;background:rgba(148,163,184,0.14);margin-bottom:24px;'></div>", unsafe_allow_html=True)
@@ -699,7 +700,14 @@ def page_mission_control(hydro, weather, wqi, news, alerts, activity, mode):
     colA, colB = st.columns([6, 4])
     with colA:
         st.markdown("<h3>Environmental Map</h3>", unsafe_allow_html=True)
-        m = folium.Map(location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], zoom_start=13, tiles="CartoDB dark_matter")
+        
+        # Use simple OpenStreetMap to avoid API keys and CartoDB issues
+        m = folium.Map(
+            location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], 
+            zoom_start=13, 
+            tiles="OpenStreetMap",
+            control_scale=True
+        )
         folium.Marker(
             [BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']],
             popup="Bhavanisagar Dam", tooltip="Bhavanisagar Dam",
