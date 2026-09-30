@@ -855,11 +855,12 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
 
     with r2c1:
         st.markdown("<h3>Satellite Observation</h3>", unsafe_allow_html=True)
-        m_sat = folium.Map(location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], zoom_start=11, tiles=None)
-        folium.TileLayer(
-            tiles='https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/current/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg',
-            attr='NASA EOSDIS GIBS', name='NASA GIBS True Color', overlay=True
-        ).add_to(m_sat)
+        m_sat = folium.Map(
+            location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], 
+            zoom_start=13, 
+            tiles="OpenStreetMap",
+            control_scale=True
+        )
         folium.Marker([BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], tooltip="Bhavanisagar Dam").add_to(m_sat)
         components.html(m_sat._repr_html_(), height=350)
 
