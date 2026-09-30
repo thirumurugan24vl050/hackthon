@@ -98,29 +98,38 @@ def fetch_news(query: str) -> List[Dict]:
         print(f"Error fetching news for {query}: {e}")
         return []
 
+import concurrent.futures
+
 def run_all_fetches():
-    """Iterates through all queries, fetches news, and saves to DB."""
+    """Iterates through all queries, fetches news in parallel, and saves to DB."""
     queries = NEWS_CONFIG.get('search_queries', [])
     all_results = []
-    
     now_utc = datetime.now(timezone.utc).isoformat()
     
-    for query in queries:
-        results = fetch_news(query)
-        for item in results:
-            execute_query(
-                '''
-                INSERT OR IGNORE INTO news_items 
-                (id, title, url, publisher, source_domain, published_at_utc, fetched_at_utc, source_type, status, category, first_seen_at_utc, last_seen_at_utc)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''',
-                (
-                    item['id'], item['title'], item['url'], item['publisher'], 
-                    item['source_domain'], item['published_at_utc'], now_utc, 
-                    item['source_type'], 'ACTIVE', item['category'], now_utc, now_utc
-                ),
-                commit=True
-            )
-        all_results.extend(results)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_query = {executor.submit(fetch_news, q): q for q in queries}
+        for future in concurrent.futures.as_completed(future_to_query):
+            results = future.result()
+            if results:
+                all_results.extend(results)
+                
+    params_list = []
+    for item in all_results:
+        params_list.append((
+            item['id'], item['title'], item['url'], item['publisher'], 
+            item['source_domain'], item['published_at_utc'], now_utc, 
+            item['source_type'], 'ACTIVE', item['category'], now_utc, now_utc
+        ))
+        
+    if params_list:
+        from database.db import execute_many
+        execute_many(
+            '''
+            INSERT OR IGNORE INTO news_items 
+            (id, title, url, publisher, source_domain, published_at_utc, fetched_at_utc, source_type, status, category, first_seen_at_utc, last_seen_at_utc)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''',
+            params_list
+        )
         
     return all_results
