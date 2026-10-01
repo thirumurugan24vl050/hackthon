@@ -522,7 +522,8 @@ def render_hazard_card(title, score, band, contributors, provenance="LIVE"):
 def render_sidebar(mode, hydro, weather, wqi):
     with st.sidebar:
         st.markdown(f"<div class=\'eyebrow\'>{_t('LANGUAGE')}</div>", unsafe_allow_html=True)
-        lang_choice = st.radio("Language", ["ENGLISH", "தமிழ்"], label_visibility="collapsed", index=0 if st.session_state.get("lang", "en", key="lang_radio_524") == "en" else 1, key="lang_radio_524")
+        lang_choice = st.radio("Language", ["ENGLISH", "தமிழ்"], label_visibility="collapsed", index=0 if st.session_state.get("lang", "en") == "en" else 1, key="lang_radio_524")
+
         st.session_state.lang = "en" if lang_choice == "ENGLISH" else "ta"
         st.markdown("<div style=\'height:1px;background:rgba(148,163,184,0.14);margin-bottom:24px;\'></div>", unsafe_allow_html=True)
         st.markdown(f"""
@@ -1211,7 +1212,8 @@ def main():
     # Sidebar: Data Mode
     with st.sidebar:
         st.markdown(f"<div class=\'eyebrow\'>{_t('LANGUAGE')}</div>", unsafe_allow_html=True)
-        lang_choice = st.radio("Language", ["ENGLISH", "தமிழ்"], label_visibility="collapsed", index=0 if st.session_state.get("lang", "en", key="lang_radio_1213") == "en" else 1, key="lang_radio_1213")
+        lang_choice = st.radio("Language", ["ENGLISH", "தமிழ்"], label_visibility="collapsed", index=0 if st.session_state.get("lang", "en") == "en" else 1, key="lang_radio_1213")
+
         st.session_state.lang = "en" if lang_choice == "ENGLISH" else "ta"
         st.markdown("<div style=\'height:1px;background:rgba(148,163,184,0.14);margin-bottom:24px;\'></div>", unsafe_allow_html=True)
         st.markdown(f"<div class=\'eyebrow\'>{_t('DATA MODE')}</div>", unsafe_allow_html=True)
