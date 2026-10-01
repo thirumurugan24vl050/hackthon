@@ -11,7 +11,7 @@ import streamlit.components.v1 as components
 import threading
 from datetime import datetime, timezone, timedelta
 
-from ui.translations import t
+from translations import t
 def _t(key):
     return t(key, st.session_state.get("lang", "en"))
 
