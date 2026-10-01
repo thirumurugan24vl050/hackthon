@@ -941,7 +941,7 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
     <div class="panel">
         <table style="width:100%;text-align:left;border-collapse:collapse;">
             <tr style="border-bottom:1px solid rgba(148,163,184,0.14);">
-                <th style="padding:8px;">{_t('Parameter')}</th><th style="padding:8px;">{_t('Value')}</th><th style="padding:8px;">{_t('Unit')}</th><th style="padding:8px;">{_t('Reference Date')}</th><th style="padding:8px;">{_t('Source:\').replace(\':\', \'')}</th><th style="padding:8px;">{_t('Provenance')}</th>
+                <th style="padding:8px;">{_t('Parameter')}</th><th style="padding:8px;">{_t('Value')}</th><th style="padding:8px;">{_t('Unit')}</th><th style="padding:8px;">{_t('Reference Date')}</th><th style="padding:8px;">{_t("Source:").replace(":", "")}</th><th style="padding:8px;">{_t('Provenance')}</th>
             </tr>
             {rows_html}
         </table>
