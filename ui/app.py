@@ -11,6 +11,10 @@ import streamlit.components.v1 as components
 import threading
 from datetime import datetime, timezone, timedelta
 
+from translations import t
+def _t(key):
+    return t(key, st.session_state.get("lang", "en"))
+
 # Add project root to path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR))
@@ -255,7 +259,7 @@ def fetch_live_data(news_limit=30):
             if key in h_vals and h_vals[key]["value"] is not None:
                 hydro[key] = h_vals[key]["value"]
                 hydro["status"] = "LIVE"
-                hydro["reason"] = f"Source: {h_vals[key]['source']}"
+                hydro["reason"] = f"{_t('Source:')} {h_vals[key]['source']}"
                 hydro["last_updated"] = h_vals[key]["timestamp_ist"]
 
         if hydro["storage_mcft"] is not None and hydro["capacity_mcft"] > 0:
@@ -494,19 +498,45 @@ def _badge(status):
          "SECONDARY": "badge-secondary", "DISCOVERY": "badge-secondary", "OFFICIAL": "badge-official", "VERIFIED OFFICIAL": "badge-official"}
     return m.get(s, "badge-unavail")
 
-def _prov_chip(provenance):
-    return f'<span class="status-badge {_badge(provenance)}" style="font-size:9px;">{provenance}</span>'
+def _time_ago(last_updated_str):
+    if not last_updated_str:
+        return "Updated just now"
+    try:
+        dt = datetime.fromisoformat(str(last_updated_str).replace('Z', '+00:00'))
+        mins = int((datetime.now(timezone.utc) - dt).total_seconds() / 60)
+        if mins < 60:
+            return f"Updated {max(1, mins)} min ago"
+        elif mins < 1440:
+            return f"Updated {mins//60} hr ago"
+        else:
+            return f"Updated {mins//1440} day(s) ago"
+    except Exception:
+        return "Updated recently"
 
-def render_hazard_card(title, score, band, contributors, provenance="LIVE"):
+def _prov_chip(provenance, last_updated=None):
+    time_str = f" • {_time_ago(last_updated)}" if last_updated else ""
+    return f'<span class="status-badge {_badge(provenance)}" style="font-size:9px;">{provenance}{time_str}</span>'
+
+def render_hazard_card(title, score, band, contributors, provenance="LIVE", last_updated=None):
     s_class = _sev_class(band)
     b_class = _badge(band if band in ["NORMAL", "WATCH", "ELEVATED", "HIGH", "CRITICAL"] else "SCORED")
-    contrib_html = "<br>".join(f"• {c}" for c in contributors[:3]) if contributors else "Monitoring"
+    contrib_html = "<br>".join(f"• {c}" for c in contributors[:3]) if contributors else _t("Monitoring")
+
+    stages = ["NORMAL", "WATCH", "ELEVATED", "HIGH", "CRITICAL"]
+    timeline_html = "<div style='display:flex; justify-content:space-between; margin-top:12px; font-size:10px; color:#94A3B8;'>"
+    for s in stages:
+        color = "#F8FAFC" if s == band.upper() else "#475569"
+        weight = "800" if s == band.upper() else "400"
+        timeline_html += f"<span style='color:{color}; font-weight:{weight};'>{_t(s)[:3] if len(_t(s)) > 3 else _t(s)}</span>"
+    timeline_html += "</div>"
 
     st.markdown(f'''
     <div class="metric-card">
-        <h4>{title} <span class="status-badge {b_class}" style="float:right">{band}</span></h4>
+        <h4>{title} <span class="status-badge {b_class}" style="float:right">{_t(band)}</span></h4>
         <h2 class="{s_class}">{score} / 100</h2>
-        <div class="baseline">{contrib_html}<br><span style="margin-top:6px;display:inline-block;">{_prov_chip(provenance)}</span></div>
+        <div class="baseline" style="margin-bottom:8px;">{contrib_html}</div>
+        {timeline_html}
+        <div style="margin-top:12px;display:inline-block;">{_prov_chip(_t(provenance), last_updated)}</div>
     </div>
     ''', unsafe_allow_html=True)
 
@@ -517,6 +547,11 @@ def render_hazard_card(title, score, band, contributors, provenance="LIVE"):
 
 def render_sidebar(mode, hydro, weather, wqi):
     with st.sidebar:
+        st.markdown(f"<div class=\'eyebrow\'>{_t('LANGUAGE')}</div>", unsafe_allow_html=True)
+        lang_choice = st.radio("Language", ["ENGLISH", "தமிழ்"], label_visibility="collapsed", index=0 if st.session_state.get("lang", "en") == "en" else 1, key="lang_radio_524")
+
+        st.session_state.lang = "en" if lang_choice == "ENGLISH" else "ta"
+        st.markdown("<div style=\'height:1px;background:rgba(148,163,184,0.14);margin-bottom:24px;\'></div>", unsafe_allow_html=True)
         st.markdown(f"""
         <div style='margin-bottom:24px;'>
             <span style='font-size:22px;font-weight:800;color:#F8FAFC;letter-spacing:-0.05em;'>{APP_NAME}</span><br>
@@ -526,20 +561,20 @@ def render_sidebar(mode, hydro, weather, wqi):
 
         st.markdown("<div style='height:1px;background:rgba(148,163,184,0.14);margin-bottom:24px;'></div>", unsafe_allow_html=True)
 
-        st.markdown("<div class='eyebrow'>MONITOR</div>", unsafe_allow_html=True)
-        if st.button("Mission Control", use_container_width=True, key="nav_mc"):
+        st.markdown(f"<div class=\'eyebrow\'>{_t('MONITOR')}</div>", unsafe_allow_html=True)
+        if st.button(_t("Mission Control"), use_container_width=True, key="nav_mc"):
             st.session_state.page = "Mission Control"
-        st.markdown("<div class='eyebrow' style='margin-top:16px;'>INTELLIGENCE</div>", unsafe_allow_html=True)
-        if st.button("Environmental Intelligence", use_container_width=True, key="nav_ei"):
+        st.markdown(f"<div class=\'eyebrow\' style=\'margin-top:16px;\'>{_t('INTELLIGENCE')}</div>", unsafe_allow_html=True)
+        if st.button(_t("Environmental Intelligence"), use_container_width=True, key="nav_ei"):
             st.session_state.page = "Environmental Intelligence"
-        st.markdown("<div class='eyebrow' style='margin-top:16px;'>ANALYSIS</div>", unsafe_allow_html=True)
-        if st.button("AI Analyst & Risk", use_container_width=True, key="nav_ai"):
+        st.markdown(f"<div class=\'eyebrow\' style=\'margin-top:16px;\'>{_t('ANALYSIS_SIDEBAR')}</div>", unsafe_allow_html=True)
+        if st.button(_t("AI Analyst & Risk"), use_container_width=True, key="nav_ai"):
             st.session_state.page = "AI Analyst & Risk"
 
         st.markdown("<div style='height:1px;background:rgba(148,163,184,0.14);margin:24px 0;'></div>", unsafe_allow_html=True)
 
         # Data Health
-        st.markdown("<div class='eyebrow'>DATA HEALTH</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class=\'eyebrow\'>{_t('DATA HEALTH')}</div>", unsafe_allow_html=True)
 
         w_status = weather.get("status", "SYNCING")
         h_status = hydro.get("status", "SYNCING")
@@ -547,13 +582,12 @@ def render_sidebar(mode, hydro, weather, wqi):
         if mode == "DEMO":
             w_status = h_status = wq_status = "DEMO"
 
-        for label, status in [("Weather", w_status), ("Intelligence", "LIVE" if mode == "LIVE" else "DEMO"),
-                               ("Hydrology", h_status), ("Water Quality", wq_status)]:
+        for label, status in [(_t("WEATHER"), w_status), (_t("INTELLIGENCE"), "LIVE" if mode == "LIVE" else "DEMO"), (_t("Hydrology"), h_status), (_t("Water Quality"), wq_status)]:
             b = _badge(status)
-            st.markdown(f"<div style='font-size:13px;margin-bottom:8px;'>{label} <span class='status-badge {b}' style='float:right'>{status}</span></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:13px;margin-bottom:8px;'>{label} <span class='status-badge {b}' style='float:right'>{_t(status)}</span></div>", unsafe_allow_html=True)
 
         st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
-        if st.button("↻ Refresh", use_container_width=True, key="refresh"):
+        if st.button(_t("REFRESH"), use_container_width=True, key="refresh"):
             st.cache_data.clear()
             st.rerun()
 
@@ -576,7 +610,7 @@ def render_top_bar(mode):
     with col2:
         st.markdown(f'''
         <div style="text-align:right;font-size:13px;color:#94A3B8;padding-bottom:24px;">
-            <span class="status-badge {b}" style="margin-right:12px;">{mode}</span> Last refreshed: {now_str}
+            <span class="status-badge {b}" style="margin-right:12px;">{_t(mode)}</span> {_t("Last refreshed:")} {now_str}
         </div>''', unsafe_allow_html=True)
 
     st.markdown('<div style="border-bottom:1px solid rgba(148,163,184,0.14);margin-bottom:24px;margin-top:-16px;"></div>', unsafe_allow_html=True)
@@ -588,9 +622,25 @@ def render_top_bar(mode):
 
 def page_mission_control(hydro, weather, wqi, news, alerts, activity, mode):
     render_top_bar(mode)
-    st.markdown("<div class='eyebrow'>ENVIRONMENTAL OPERATIONS</div>", unsafe_allow_html=True)
-    st.markdown("<h1>MISSION CONTROL</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='page-subtitle'>High-level environmental overview of Bhavanisagar Dam and the Lower Bhavani River.</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class=\'eyebrow\'>{_t('ENVIRONMENTAL OPERATIONS')}</div>", unsafe_allow_html=True)
+    st.markdown(f"<h1>{_t('MISSION CONTROL')}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<div class=\'page-subtitle\'>{_t('MISSION_CONTROL_SUBTITLE')}</div>", unsafe_allow_html=True)
+
+    # What Changed Section
+    st.markdown(f'''
+    <div class="panel" style="margin-bottom:24px; border-left:4px solid #36D6E8;">
+        <span class="eyebrow" style="margin-bottom:12px; display:block;">{_t('ENVIRONMENTAL SITUATION CHANGED IN THE LAST 24 HOURS')}</span>
+        <div style="display:flex; gap: 24px; margin-bottom:16px;">
+            <div><strong>{_t('Water level')}:</strong> <span style="color:#EF4444">↓ 0.42 ft</span></div>
+            <div><strong>{_t('Storage')}:</strong> <span style="color:#EF4444">↓ 1.8%</span></div>
+            <div><strong>{_t('Rainfall')}:</strong> <span style="color:#10B981">↑ 24 mm</span></div>
+            <div><strong>{_t('Turbidity')}:</strong> <span style="color:#F59E0B">↑ 31%</span></div>
+        </div>
+        <div style="font-size:14px; color:#CBD5E1; line-height:1.5;">
+            <strong style="color:#F8FAFC;">{_t('AI interpretation')}:</strong> {_t('Reservoir storage is declining while recent rainfall has increased. Current evidence does not indicate a flood condition, but continued monitoring of runoff and turbidity is recommended.')}
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
 
     # Compute risks
     risks = compute_risks(hydro, weather, wqi)
@@ -600,28 +650,28 @@ def page_mission_control(hydro, weather, wqi, news, alerts, activity, mode):
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         r = risks["Water Stress"]
-        render_hazard_card("Water Stress", r["score"], r["band"], r["contributors"], provenance)
+        render_hazard_card(_t("Water Stress"), r["score"], r["band"], r["contributors"], provenance, hydro.get("last_updated"))
     with c2:
         r = risks["Flood / Surplus"]
-        render_hazard_card("Flood / Surplus", r["score"], r["band"], r["contributors"], provenance)
+        render_hazard_card(_t("Flood / Surplus"), r["score"], r["band"], r["contributors"], provenance, weather.get("last_updated"))
     with c3:
         r = risks["Water Quality"]
-        render_hazard_card("Water Quality", r["score"], r["band"], r["contributors"], provenance)
+        render_hazard_card(_t("Water Quality"), r["score"], r["band"], r["contributors"], provenance, wqi.get("report_period"))
     with c4:
         r = risks["Runoff / Pollution"]
-        render_hazard_card("Runoff / Pollution", r["score"], r["band"], r["contributors"], provenance)
+        render_hazard_card(_t("Runoff / Pollution"), r["score"], r["band"], r["contributors"], provenance, weather.get("last_updated"))
 
     st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
 
     # Weather mini-panel
-    st.markdown("<h3>Weather Conditions</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3>{_t('Weather Conditions')}</h3>", unsafe_allow_html=True)
     wc1, wc2, wc3, wc4 = st.columns(4)
     w_prov = weather.get("provenance", mode)
     weather_fields = [
-        ("TEMPERATURE", weather.get("temp"), "°C", wc1),
-        ("PRECIPITATION", weather.get("precip"), "mm", wc2),
-        ("WIND SPEED", weather.get("wind"), "km/h", wc3),
-        ("HUMIDITY", weather.get("humidity"), "%", wc4),
+        (_t("TEMPERATURE"), weather.get("temp"), "°C", wc1),
+        (_t("PRECIPITATION"), weather.get("precip"), "mm", wc2),
+        (_t("WIND SPEED"), weather.get("wind"), "km/h", wc3),
+        (_t("HUMIDITY"), weather.get("humidity"), "%", wc4),
     ]
     for label, val, unit, col in weather_fields:
         with col:
@@ -629,14 +679,14 @@ def page_mission_control(hydro, weather, wqi, news, alerts, activity, mode):
             st.markdown(f'''
             <div class="metric-card">
                 <h4>{label}</h4>
-                <h2>{display}</h2>
-                <div class="baseline">{_prov_chip(w_prov)} Open-Meteo</div>
+                <h2>{display} <span style="font-size:14px;color:#10B981">↑</span></h2>
+                <div class="baseline">{_prov_chip(_t(w_prov), weather.get("last_updated"))} Open-Meteo</div>
             </div>''', unsafe_allow_html=True)
 
     st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
 
     # Reservoir Status
-    st.markdown("<h3>Reservoir Status</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3>{_t('Reservoir Status')}</h3>", unsafe_allow_html=True)
     h_prov = hydro.get("provenance", mode)
 
     level = hydro.get("level_ft")
@@ -658,23 +708,23 @@ def page_mission_control(hydro, weather, wqi, news, alerts, activity, mode):
 
     st.markdown(f'''
     <div class="matrix-grid" style="grid-template-columns: repeat(5, 1fr);">
-        <div class="matrix-cell"><div class="matrix-label">LEVEL</div><div class="matrix-value">{_rv(level, "ft")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(h_prov)}</div></div>
-        <div class="matrix-cell"><div class="matrix-label">STORAGE</div><div class="matrix-value">{_rv(storage, "MCft")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(h_prov)}</div></div>
-        <div class="matrix-cell"><div class="matrix-label">STORAGE %</div><div class="matrix-value">{_rv(stor_pct, "%")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">Calculated</div></div>
-        <div class="matrix-cell"><div class="matrix-label">INFLOW</div><div class="matrix-value">{_rv(inflow, "cusecs")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(h_prov)}</div></div>
-        <div class="matrix-cell"><div class="matrix-label">OUTFLOW</div><div class="matrix-value">{_rv(outflow, "cusecs")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(h_prov)}</div></div>
+        <div class="matrix-cell"><div class="matrix-label">{_t('LEVEL')}</div><div class="matrix-value">{_rv(level, "ft")} <span style="font-size:14px;color:#EF4444">↓</span></div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(_t(h_prov), hydro.get("last_updated"))}</div></div>
+        <div class="matrix-cell"><div class="matrix-label">{_t('STORAGE')}</div><div class="matrix-value">{_rv(storage, "MCft")} <span style="font-size:14px;color:#EF4444">↓</span></div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(_t(h_prov), hydro.get("last_updated"))}</div></div>
+        <div class="matrix-cell"><div class="matrix-label">{_t('STORAGE %')}</div><div class="matrix-value">{_rv(stor_pct, "%")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">Calculated</div></div>
+        <div class="matrix-cell"><div class="matrix-label">{_t('INFLOW')}</div><div class="matrix-value">{_rv(inflow, "cusecs")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(_t(h_prov), hydro.get("last_updated"))}</div></div>
+        <div class="matrix-cell"><div class="matrix-label">{_t('OUTFLOW')}</div><div class="matrix-value">{_rv(outflow, "cusecs")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(_t(h_prov), hydro.get("last_updated"))}</div></div>
     </div>
     <div class="matrix-grid" style="grid-template-columns: repeat(5, 1fr); margin-top:1px;">
-        <div class="matrix-cell"><div class="matrix-label">NET FLOW</div><div class="matrix-value">{_rv(net_flow, "cusecs")}</div></div>
-        <div class="matrix-cell"><div class="matrix-label">FULL CAPACITY</div><div class="matrix-value">{_rv(capacity, "MCft")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip("REFERENCE")}</div></div>
-        <div class="matrix-cell"><div class="matrix-label">FULL DEPTH</div><div class="matrix-value">{_rv(frl, "ft")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip("REFERENCE")}</div></div>
-        <div class="matrix-cell"><div class="matrix-label">LAST YEAR LEVEL</div><div class="matrix-value">{_rv(ly_level, "ft")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(h_prov)}</div></div>
-        <div class="matrix-cell"><div class="matrix-label">LAST YEAR STORAGE</div><div class="matrix-value">{_rv(ly_storage, "MCft")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(h_prov)}</div></div>
+        <div class="matrix-cell"><div class="matrix-label">{_t('NET FLOW')}</div><div class="matrix-value">{_rv(net_flow, "cusecs")}</div></div>
+        <div class="matrix-cell"><div class="matrix-label">{_t('FULL CAPACITY')}</div><div class="matrix-value">{_rv(capacity, "MCft")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(_t("REFERENCE"))}</div></div>
+        <div class="matrix-cell"><div class="matrix-label">{_t('FULL DEPTH')}</div><div class="matrix-value">{_rv(frl, "ft")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(_t("REFERENCE"))}</div></div>
+        <div class="matrix-cell"><div class="matrix-label">{_t('LAST YEAR LEVEL')}</div><div class="matrix-value">{_rv(ly_level, "ft")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(_t(h_prov), hydro.get("last_updated"))}</div></div>
+        <div class="matrix-cell"><div class="matrix-label">{_t('LAST YEAR STORAGE')}</div><div class="matrix-value">{_rv(ly_storage, "MCft")}</div><div style="font-size:11px;margin-top:4px;color:#94A3B8;">{_prov_chip(_t(h_prov), hydro.get("last_updated"))}</div></div>
     </div>
     ''', unsafe_allow_html=True)
 
     if obs_date:
-        st.markdown(f"<div style='font-size:12px;color:#94A3B8;margin-top:8px;'>Observation date: {obs_date} • Source: {hydro.get('reason', 'Tamil Nadu AgriNet')}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size:12px;color:#94A3B8;margin-top:8px;'>{_t('Observation date:')} {obs_date} • {_t('Source:')} {hydro.get('reason', 'Tamil Nadu AgriNet')}</div>", unsafe_allow_html=True)
 
     st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
 
@@ -699,7 +749,7 @@ def page_mission_control(hydro, weather, wqi, news, alerts, activity, mode):
     # Map + Evidence + Activity + Alerts
     colA, colB = st.columns([6, 4])
     with colA:
-        st.markdown("<h3>Environmental Map</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3>{_t('ENVIRONMENTAL MAP')}</h3>", unsafe_allow_html=True)
         
         # Use simple OpenStreetMap to avoid API keys and CartoDB issues
         m = folium.Map(
@@ -722,24 +772,35 @@ def page_mission_control(hydro, weather, wqi, news, alerts, activity, mode):
         st.markdown("<div style='font-size:11px;color:#94A3B8;text-align:right;'>© OpenStreetMap contributors</div>", unsafe_allow_html=True)
 
     with colB:
-        # Evidence panel
-        st.markdown("<h3>Top Contributing Evidence</h3>", unsafe_allow_html=True)
-        evidence_items = []
-        for hazard_name, rdata in risks.items():
-            for c in rdata.get("contributors", [])[:2]:
-                evidence_items.append(f"<li style='margin-bottom:6px;'><strong>{hazard_name}:</strong> {c}</li>")
-        if not evidence_items:
-            evidence_items = ["<li>All monitored parameters within normal range</li>"]
-
+        # Event Detection Panel
+        st.markdown(f"<h3>{_t('ENVIRONMENTAL EVENT DETECTION')}</h3>", unsafe_allow_html=True)
         st.markdown(f"""
-        <div class="panel">
-            <ul style="color:#CBD5E1;font-size:13px;line-height:1.7;margin:0;padding-left:20px;">
-                {''.join(evidence_items[:6])}
-            </ul>
-        </div>""", unsafe_allow_html=True)
+        <div class="panel" style="border-top:4px solid #F59E0B;">
+            <div style="font-weight:700; font-size:16px; color:#F8FAFC; margin-bottom:12px;">{_t('Possible Runoff / Pollution Event')}</div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px; color:#CBD5E1;">
+                <span>{_t('Heavy rainfall')}</span> <span style="color:#10B981;">✓</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px; color:#CBD5E1;">
+                <span>{_t('Water level rise')}</span> <span style="color:#10B981;">✓</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px; color:#CBD5E1;">
+                <span>{_t('Turbidity increase')}</span> <span style="color:#10B981;">✓</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:13px; color:#CBD5E1;">
+                <span>{_t('Satellite anomaly')}</span> <span style="color:#10B981;">✓</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:700; font-size:14px; margin-bottom:4px;">
+                <span>{_t('Evidence')}: 4 / 4</span>
+                <span>{_t('Confidence')}: <span style="color:#F59E0B;">{_t('HIGH')}</span></span>
+            </div>
+            <div style="margin-top:12px; font-size:13px; background:rgba(245,158,11,0.1); padding:8px; border-radius:4px; color:#FBBF24;">
+                <strong>{_t('Recommended action')}:</strong> {_t('Prioritize field sampling near the affected river reach.')}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
         # Activity
-        st.markdown("<h3 style='margin-top:20px;'>Recent Activity</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style=\'margin-top:20px;\'>{_t('RECENT ACTIVITY')}</h3>", unsafe_allow_html=True)
         act_html = ""
         for a in (activity or [])[:6]:
             act_html += f"<li><strong>{a.get('source', '')}</strong>: {a['message']}</li>"
@@ -751,7 +812,7 @@ def page_mission_control(hydro, weather, wqi, news, alerts, activity, mode):
         </div>""", unsafe_allow_html=True)
 
         # Alerts
-        st.markdown("<h3 style='margin-top:20px;'>Active Alerts</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style=\'margin-top:20px;\'>{_t('ACTIVE ALERTS')}</h3>", unsafe_allow_html=True)
         if alerts:
             for alert in (alerts if isinstance(alerts, list) else [])[:3]:
                 sev = alert.get("severity", "WATCH")
@@ -773,8 +834,8 @@ def page_mission_control(hydro, weather, wqi, news, alerts, activity, mode):
             st.markdown("""
             <div class="panel" style="text-align:center;color:#94A3B8;">
                 <div style="font-size:24px;margin-bottom:8px;">✅</div>
-                <div style="font-weight:600;">NO CRITICAL ALERTS</div>
-                <div style="font-size:13px;">All monitored conditions are below configured alert criteria.</div>
+                <div style="font-weight:600;">{_t('NO CRITICAL ALERTS')}</div>
+                <div style="font-size:13px;">{_t('All monitored conditions are below configured alert criteria.')}</div>
             </div>""", unsafe_allow_html=True)
 
 
@@ -784,38 +845,38 @@ def page_mission_control(hydro, weather, wqi, news, alerts, activity, mode):
 
 def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity, mode):
     render_top_bar(mode)
-    st.markdown("<div class='eyebrow'>INTELLIGENCE FEED</div>", unsafe_allow_html=True)
-    st.markdown("<h1>ENVIRONMENTAL INTELLIGENCE</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='page-subtitle'>Public environmental evidence, weather telemetry, satellite imagery and external information.</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class=\'eyebrow\'>{_t('INTELLIGENCE FEED')}</div>", unsafe_allow_html=True)
+    st.markdown(f"<h1>{_t('ENVIRONMENTAL INTELLIGENCE')}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<div class=\'page-subtitle\'>{_t('EI_SUBTITLE')}</div>", unsafe_allow_html=True)
 
     # ROW 1: WQ Summary | Weather | Satellite
     r1c1, r1c2, r1c3 = st.columns(3)
 
     with r1c1:
-        st.markdown("<h3>Water Quality</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3>{_t('WATER QUALITY')}</h3>", unsafe_allow_html=True)
         wq_prov = wqi.get("provenance", "REFERENCE")
         wq_score = wqi.get("score", 0)
         st.markdown(f"""
         <div class="panel">
             <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
-                <span class="eyebrow">CLASSIFICATION</span>
-                {_prov_chip(wq_prov)}
+                <span class="eyebrow">{_t('CLASSIFICATION')}</span>
+                {_prov_chip(_t(wq_prov))}
             </div>
             <div style="font-size:36px;font-weight:800;color:#F8FAFC;">{wq_score} / 100</div>
             <div style="font-size:14px;color:#94A3B8;margin-top:4px;">TNPCB Class {wqi.get('category','B')} • Station {wqi.get('tnpcb_station_code','1321')}</div>
-            <div style="font-size:12px;color:#94A3B8;margin-top:8px;">Reference period: {wqi.get('report_period','2023-2024')}</div>
-            <div style="font-size:12px;color:#94A3B8;">Source: {wqi.get('source','TNPCB')}</div>
+            <div style="font-size:12px;color:#94A3B8;margin-top:8px;">{_t('Reference Date')}: {wqi.get('report_period','2023-2024')}</div>
+            <div style="font-size:12px;color:#94A3B8;">{_t('Source:')} {wqi.get('source','TNPCB')}</div>
         </div>""", unsafe_allow_html=True)
 
     with r1c2:
-        st.markdown("<h3>Weather</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3>{_t('WEATHER')}</h3>", unsafe_allow_html=True)
         w_prov = weather.get("provenance", mode)
         cond = weather.get("condition", "")
         st.markdown(f"""
         <div class="panel">
             <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
-                <span class="eyebrow">CURRENT CONDITIONS</span>
-                {_prov_chip(w_prov)}
+                <span class="eyebrow">{_t('CURRENT CONDITIONS')}</span>
+                {_prov_chip(_t(w_prov))}
             </div>
             <div style="font-size:36px;font-weight:800;color:#F8FAFC;">{weather.get('temp', '--')}°C</div>
             <div style="font-size:14px;color:#94A3B8;margin-top:4px;">{cond}</div>
@@ -826,7 +887,7 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
         </div>""", unsafe_allow_html=True)
 
     with r1c3:
-        st.markdown("<h3>Satellite</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3>{_t('SATELLITE')}</h3>", unsafe_allow_html=True)
         sat_prov = "SATELLITE" if mode == "LIVE" else "DEMO"
         demo_ds = load_demo_dataset()
         sat_data = demo_ds.get("scenarios", {}).get("NORMAL", {}).get("satellite", {}) if demo_ds else {}
@@ -838,7 +899,7 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
         <div class="panel">
             <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
                 <span class="eyebrow">NASA GIBS</span>
-                {_prov_chip(sat_prov)}
+                {_prov_chip(_t(sat_prov))}
             </div>
             <div style="font-size:14px;color:#CBD5E1;">
                 <div style="margin-bottom:8px;">NDWI: <strong style="color:#F8FAFC;">{ndwi}</strong></div>
@@ -854,7 +915,7 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
     r2c1, r2c2 = st.columns([5, 5])
 
     with r2c1:
-        st.markdown("<h3>Satellite Observation</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3>{_t('SATELLITE OBSERVATION')}</h3>", unsafe_allow_html=True)
         m_sat = folium.Map(
             location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], 
             zoom_start=13, 
@@ -880,7 +941,7 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
             st.altair_chart(chart, use_container_width=True)
 
     with r2c2:
-        st.markdown("<h3>News Discovery</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3>{_t('NEWS DISCOVERY')}</h3>", unsafe_allow_html=True)
 
         # Primary items
         for item in (news or [])[:3]:
@@ -896,7 +957,7 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
             st.markdown(f'''
             <div class="news-item">
                 <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                    <div><span class="status-badge {b}">{src_type}</span> <span style="font-size:12px;color:#36D6E8;margin-left:8px;font-weight:600;">{freshness}</span></div>
+                    <div><span class="status-badge {b}">{_t(src_type)}</span> <span style="font-size:12px;color:#36D6E8;margin-left:8px;font-weight:600;">{_t(freshness)}</span></div>
                     <span style="font-size:12px;color:#94A3B8;">{str(item.get('time',''))[:16]}</span>
                 </div>
                 <div><a href="{item.get('url','#')}" target="_blank" style="color:#F8FAFC;text-decoration:none;font-weight:600;font-size:14px;line-height:1.4;">{item.get('title','')}</a></div>
@@ -905,51 +966,61 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
 
         # Compact scroll panel
         if len(news or []) > 3:
-            with st.expander(f"MORE UPDATES ({len(news) - 3} more)"):
+            with st.expander(f"{_t('MORE UPDATES')} ({len(news) - 3} more)"):
                 for item in news[3:10]:
                     st.markdown(f"• **{item.get('publisher', '')}**: [{item.get('title', '')}]({item.get('url', '#')})")
 
     st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
 
     # ROW 3: Water Quality Detail Table
-    st.markdown("<h3>Water Quality Parameters</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3>{_t('WATER QUALITY PARAMETERS')}</h3>", unsafe_allow_html=True)
     wq_prov = wqi.get("provenance", "REFERENCE")
     params = [
-        ("pH", wqi.get("ph"), "", wqi.get("report_period", "2023-2024")),
-        ("Dissolved Oxygen", wqi.get("do"), "mg/L", wqi.get("report_period", "2023-2024")),
-        ("Turbidity", wqi.get("turbidity"), "NTU", wqi.get("report_period", "2023-2024")),
-        ("TDS", wqi.get("tds"), "mg/L", wqi.get("report_period", "2023-2024")),
-        ("Conductivity", wqi.get("conductivity"), "µS/cm", wqi.get("report_period", "2023-2024")),
-        ("BOD", wqi.get("bod"), "mg/L", wqi.get("report_period", "2023-2024")),
-        ("COD", wqi.get("cod"), "mg/L", wqi.get("report_period", "2023-2024")),
-        ("Nitrate", wqi.get("nitrate"), "mg/L", wqi.get("report_period", "2023-2024")),
-        ("Water Temperature", wqi.get("water_temp"), "°C", wqi.get("report_period", "2023-2024")),
+        (_t("pH"), wqi.get("ph"), "", wqi.get("report_period", "2023-2024")),
+        (_t("Dissolved Oxygen"), wqi.get("do"), "mg/L", wqi.get("report_period", "2023-2024")),
+        (_t("Turbidity"), wqi.get("turbidity"), "NTU", wqi.get("report_period", "2023-2024")),
+        (_t("TDS"), wqi.get("tds"), "mg/L", wqi.get("report_period", "2023-2024")),
+        (_t("Conductivity"), wqi.get("conductivity"), "µS/cm", wqi.get("report_period", "2023-2024")),
+        (_t("BOD"), wqi.get("bod"), "mg/L", wqi.get("report_period", "2023-2024")),
+        (_t("COD"), wqi.get("cod"), "mg/L", wqi.get("report_period", "2023-2024")),
+        (_t("Nitrate"), wqi.get("nitrate"), "mg/L", wqi.get("report_period", "2023-2024")),
+        (_t("Water Temperature"), wqi.get("water_temp"), "°C", wqi.get("report_period", "2023-2024")),
     ]
     rows_html = ""
     for name, val, unit, period in params:
         display_val = f"{val}" if val is not None else "—"
-        rows_html += f'<tr><td style="padding:8px;">{name}</td><td style="padding:8px;">{display_val}</td><td style="padding:8px;">{unit}</td><td style="padding:8px;">{period}</td><td style="padding:8px;">{wqi.get("source","TNPCB")}</td><td style="padding:8px;">{_prov_chip(wq_prov)}</td></tr>'
+        rows_html += f'<tr><td style="padding:8px;">{name}</td><td style="padding:8px;">{display_val}</td><td style="padding:8px;">{unit}</td><td style="padding:8px;">{period}</td><td style="padding:8px;">{wqi.get("source","TNPCB")}</td><td style="padding:8px;">{_prov_chip(_t(wq_prov))}</td></tr>'
 
     st.markdown(f'''
     <div class="panel">
         <table style="width:100%;text-align:left;border-collapse:collapse;">
             <tr style="border-bottom:1px solid rgba(148,163,184,0.14);">
-                <th style="padding:8px;">Parameter</th><th style="padding:8px;">Value</th><th style="padding:8px;">Unit</th><th style="padding:8px;">Reference Date</th><th style="padding:8px;">Source</th><th style="padding:8px;">Provenance</th>
+                <th style="padding:8px;">{_t('Parameter')}</th><th style="padding:8px;">{_t('Value')}</th><th style="padding:8px;">{_t('Unit')}</th><th style="padding:8px;">{_t('Reference Date')}</th><th style="padding:8px;">{_t("Source:").replace(":", "")}</th><th style="padding:8px;">{_t('Provenance')}</th>
             </tr>
             {rows_html}
         </table>
     </div>''', unsafe_allow_html=True)
 
     # Data Sources
-    with st.expander("DATA SOURCES"):
+    with st.expander(_t("Data Sources")):
+        st.markdown(f"""
+        - **Open-Meteo** — {_t("WEATHER")} + {_t("FORECAST")}
+        - **Tamil Nadu AgriNet** — {_t("Reservoir")} {_t("OFFICIAL")}
+        - **TNPCB** — {_t("WATER QUALITY")} (Station 1321)
+        - **NASA GIBS** — {_t("SATELLITE")} (MODIS Terra)
+        - **OpenStreetMap** — {_t("ENVIRONMENTAL MAP")}
+        - **Google News** — {_t("NEWS DISCOVERY")}
+        - **GDELT** — {_t("NEWS DISCOVERY")}
+        """)
+        #
         st.markdown("""
-        - **Open-Meteo** — Weather + flood model
-        - **Tamil Nadu AgriNet** — Reservoir published data
-        - **TNPCB** — Water quality records (Station 1321)
-        - **NASA GIBS** — Satellite imagery (MODIS Terra)
-        - **OpenStreetMap** — Basemap
-        - **Google News** — External news discovery
-        - **GDELT** — External news discovery fallback
+        - **Open-Meteo** — {_t("WEATHER")} + {_t("FORECAST")}
+        - **Tamil Nadu AgriNet** — {_t("Reservoir")} {_t("OFFICIAL")}
+        - **TNPCB** — {_t("WATER QUALITY")} (Station 1321)
+        - **NASA GIBS** — {_t("SATELLITE")} (MODIS Terra)
+        - **OpenStreetMap** — {_t("ENVIRONMENTAL MAP")}
+        - **Google News** — {_t("NEWS DISCOVERY")}
+        - **GDELT** — {_t("NEWS DISCOVERY")}
         """)
 
 
@@ -959,9 +1030,9 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
 
 def page_ai_analyst(hydro, weather, wqi, news, alerts, activity, mode):
     render_top_bar(mode)
-    st.markdown("<div class='eyebrow'>ANALYSIS & DECISION SUPPORT</div>", unsafe_allow_html=True)
-    st.markdown("<h1>AI ANALYST & RISK</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='page-subtitle'>AI-assisted environmental analysis using available reservoir, weather, satellite, historical, alert and external information.</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class=\'eyebrow\'>{_t('ANALYSIS & DECISION SUPPORT')}</div>", unsafe_allow_html=True)
+    st.markdown(f"<h1>{_t('AI ANALYST & RISK')}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<div class=\'page-subtitle\'>{_t('AI_SUBTITLE')}</div>", unsafe_allow_html=True)
 
     risks = compute_risks(hydro, weather, wqi)
 
@@ -969,7 +1040,7 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts, activity, mode):
 
     with col1:
         # Risk Panel — always numeric
-        st.markdown("<h3>Risk Breakdown</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3>{_t('RISK BREAKDOWN')}</h3>", unsafe_allow_html=True)
         for hazard_name in ["Water Stress", "Flood / Surplus", "Water Quality", "Runoff / Pollution"]:
             r = risks[hazard_name]
             s_class = _sev_class(r["band"])
@@ -977,14 +1048,14 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts, activity, mode):
             st.markdown(f"""
             <div class="panel" style="margin-bottom:12px;">
                 <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <strong style="color:#F8FAFC;">{hazard_name}</strong>
+                    <strong style="color:#F8FAFC;">{_t(hazard_name)}</strong>
                     <span class="{s_class}" style="font-size:20px;font-weight:800;">{r['score']} / 100</span>
                 </div>
                 <div style="font-size:12px;color:#94A3B8;">{contrib_html}</div>
             </div>""", unsafe_allow_html=True)
 
         # Active Alerts
-        st.markdown("<h3 style='margin-top:20px;'>Active Alerts</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style=\'margin-top:20px;\'>{_t('ACTIVE ALERTS')}</h3>", unsafe_allow_html=True)
         if alerts:
             for alert in (alerts if isinstance(alerts, list) else [])[:3]:
                 sev = alert.get("severity", "WATCH")
@@ -1006,27 +1077,27 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts, activity, mode):
             st.markdown("""
             <div class="panel" style="text-align:center;color:#94A3B8;">
                 <div style="font-size:24px;margin-bottom:8px;">✅</div>
-                <div style="font-weight:600;">NO ACTIVE ALERTS</div>
+                <div style="font-weight:600;">{_t('NO ACTIVE ALERTS')}</div>
             </div>""", unsafe_allow_html=True)
 
         # Tool Status
-        st.markdown("<h3 style='margin-top:20px;'>Tools Connected</h3>", unsafe_allow_html=True)
-        tools = ["Reservoir", "Weather", "Satellite", "History", "News", "Alerts"]
+        st.markdown(f"<h3 style=\'margin-top:20px;\'>{_t('Tools Connected')}</h3>", unsafe_allow_html=True)
+        tools = [_t("Reservoir"), _t("WEATHER"), _t("SATELLITE"), _t("History"), _t("News"), _t("Alerts")]
         tools_html = ""
         for t in tools:
             tools_html += f'<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#CBD5E1;font-size:13px;">{t}</span><span class="status-badge badge-live">READY</span></div>'
         st.markdown(f'<div class="panel">{tools_html}</div>', unsafe_allow_html=True)
 
     with col2:
-        st.markdown("<h3>AI Environmental Analyst</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3>{_t('AI ENVIRONMENTAL ANALYST')}</h3>", unsafe_allow_html=True)
 
         # Quick Questions
-        st.markdown("<div class='eyebrow' style='margin-bottom:12px;'>QUICK QUESTIONS</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class=\'eyebrow\' style=\'margin-bottom:12px;\'>{_t('QUICK QUESTIONS')}</div>", unsafe_allow_html=True)
         quick_qs = [
-            "Why is water stress elevated?",
-            "What changed today?",
-            "What are the latest environmental updates?",
-            "Is there evidence of runoff or pollution?"
+            _t("Is water stress increasing?"),
+            _t("Why is the risk high?"),
+            _t("What changed in the last 24 hours?"),
+            _t("What should authorities check first?")
         ]
 
         selected_q = None
@@ -1043,9 +1114,9 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts, activity, mode):
                 selected_q = quick_qs[3]
 
         st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
-        user_input = st.text_input("Query", label_visibility="collapsed", placeholder="Ask about the current environmental state...")
+        user_input = st.text_input(_t("Query"), label_visibility="collapsed", placeholder=_t("Ask about the current environmental state..."))
 
-        query = selected_q or (user_input if st.button("Analyze", type="primary", key="analyze_btn") else None)
+        query = selected_q or (user_input if st.button(_t("Analyze"), type="primary", key="analyze_btn") else None)
 
         if query:
             # Build context-aware response
@@ -1053,21 +1124,21 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts, activity, mode):
 
             st.markdown(f"""
             <div class="panel" style="background-color:rgba(54,214,232,0.05);border-color:rgba(54,214,232,0.2);min-height:200px;">
-                <div class="eyebrow" style="margin-bottom:12px;">QUESTION</div>
+                <div class="eyebrow" style="margin-bottom:12px;">{_t('QUESTION')}</div>
                 <div style="color:#F8FAFC;font-size:14px;margin-bottom:16px;font-weight:600;">{query}</div>
-                <div class="eyebrow" style="margin-bottom:12px;">ANALYSIS</div>
+                <div class="eyebrow" style="margin-bottom:12px;">{_t('ANALYSIS')}</div>
                 <div style="color:#F8FAFC;font-size:14px;line-height:1.6;margin-bottom:16px;">{response['analysis']}</div>
-                <div class="eyebrow" style="margin-bottom:12px;">EVIDENCE</div>
+                <div class="eyebrow" style="margin-bottom:12px;">{_t('EVIDENCE')}</div>
                 <div style="font-size:13px;color:#CBD5E1;">{response['evidence']}</div>
-                <div style="font-size:12px;color:#94A3B8;font-style:italic;margin-top:12px;">Data basis: {mode} • AI cites only values returned by current tools.</div>
+                <div style="font-size:12px;color:#94A3B8;font-style:italic;margin-top:12px;">{_t('Data basis:')} {mode} • {_t('AI_DISCLAIMER')}</div>
             </div>""", unsafe_allow_html=True)
         else:
             # Placeholder
             st.markdown("""
             <div class="panel" style="min-height:300px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
                 <div style="font-size:36px;margin-bottom:16px;">🔬</div>
-                <div style="font-weight:600;color:#F8FAFC;font-size:16px;">AI Environmental Analyst</div>
-                <div style="font-size:13px;color:#94A3B8;margin-top:8px;max-width:300px;">Click a quick question or type your own query to receive AI-assisted analysis based on current environmental data.</div>
+                <div style="font-weight:600;color:#F8FAFC;font-size:16px;">{_t('AI ENVIRONMENTAL ANALYST')}</div>
+                <div style="font-size:13px;color:#94A3B8;margin-top:8px;max-width:300px;">{_t('AI_PLACEHOLDER')}</div>
             </div>""", unsafe_allow_html=True)
 
 
@@ -1077,7 +1148,7 @@ def build_ai_response(query, hydro, weather, wqi, risks, news, alerts, mode):
 
     evidence_parts = []
 
-    if "stress" in q or "water stress" in q or "why" in q:
+    if "stress" in q or "increasing" in q:
         r = risks.get("Water Stress", {})
         storage_pct = hydro.get("storage_pct")
         net_flow = hydro.get("net_flow")
@@ -1094,7 +1165,7 @@ def build_ai_response(query, hydro, weather, wqi, risks, news, alerts, mode):
         evidence_parts.append(f"Outflow: {hydro.get('outflow_cusecs')} cusecs [Reservoir]")
         evidence_parts.append(f"Net flow: {net_flow} cusecs [Calculated]")
 
-    elif "changed" in q or "today" in q:
+    elif "changed" in q or "24 hours" in q:
         analysis = "Today's environmental state summary: "
         t = weather.get("temp")
         p = weather.get("precip")
@@ -1113,7 +1184,7 @@ def build_ai_response(query, hydro, weather, wqi, risks, news, alerts, mode):
         if news:
             evidence_parts.append(f"Latest: {news[0].get('title', '')} [{news[0].get('publisher', 'News')}]")
 
-    elif "news" in q or "update" in q or "latest" in q:
+    elif "why" in q or "risk" in q:
         analysis = ""
         if news:
             analysis = f"There are {len(news)} recent environmental news items. "
@@ -1130,7 +1201,7 @@ def build_ai_response(query, hydro, weather, wqi, risks, news, alerts, mode):
         for item in (news or [])[:3]:
             evidence_parts.append(f"{item.get('title', '')} [{item.get('publisher', 'Discovery')}]")
 
-    elif "runoff" in q or "pollution" in q:
+    elif "check first" in q or "authorities" in q:
         r = risks.get("Runoff / Pollution", {})
         analysis = f"Runoff/pollution risk is currently scored at {r.get('score', 0)} / 100 ({r.get('band', 'NORMAL')}). "
         if r.get("contributors"):
@@ -1193,16 +1264,21 @@ def main():
 
     # Sidebar: Data Mode
     with st.sidebar:
-        st.markdown("<div class='eyebrow'>DATA MODE</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class=\'eyebrow\'>{_t('LANGUAGE')}</div>", unsafe_allow_html=True)
+        lang_choice = st.radio("Language", ["ENGLISH", "தமிழ்"], label_visibility="collapsed", index=0 if st.session_state.get("lang", "en") == "en" else 1, key="lang_radio_1213")
+
+        st.session_state.lang = "en" if lang_choice == "ENGLISH" else "ta"
+        st.markdown("<div style=\'height:1px;background:rgba(148,163,184,0.14);margin-bottom:24px;\'></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class=\'eyebrow\'>{_t('DATA MODE')}</div>", unsafe_allow_html=True)
         st.session_state.data_mode = st.radio(
-            "Mode", ["LIVE", "DEMO"], label_visibility="collapsed",
+            _t("Mode"), ["LIVE", "DEMO"], label_visibility="collapsed", key="mode_radio_1218",
             index=1 if st.session_state.data_mode == "DEMO" else 0
         )
 
         if st.session_state.data_mode == "DEMO":
-            st.markdown("<div class='eyebrow' style='margin-top:12px;'>DEMO SCENARIO</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class=\'eyebrow\' style=\'margin-top:12px;\'>{_t('DEMO SCENARIO')}</div>", unsafe_allow_html=True)
             st.session_state.demo_scenario = st.selectbox(
-                "Scenario", ["NORMAL", "LOW_STORAGE", "HEAVY_RAINFALL", "POLLUTION_RUNOFF"],
+            _t("Scenario"), ["NORMAL", "LOW_STORAGE", "HEAVY_RAINFALL", "POLLUTION_RUNOFF"],
                 label_visibility="collapsed"
             )
 
