@@ -915,14 +915,101 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
     r2c1, r2c2 = st.columns([5, 5])
 
     with r2c1:
-        st.markdown(f"<h3>{_t('SATELLITE OBSERVATION')}</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3>{_t('POLLUTION HOTSPOT MAP')}</h3>", unsafe_allow_html=True)
+        
+        risks = compute_risks(hydro, weather, wqi)
+        rp = risks.get("Runoff / Pollution", {})
+        band_raw = rp.get("band", "NORMAL")
+        contributors = rp.get("contributors", [])
+        
+        band_map = {
+            "NORMAL": "LOW",
+            "WATCH": "WATCH",
+            "ELEVATED": "ELEVATED",
+            "HIGH": "HOTSPOT"
+        }
+        color_map = {
+            "LOW": "green",
+            "WATCH": "yellow",
+            "ELEVATED": "orange",
+            "HOTSPOT": "red"
+        }
+        
+        current_band = band_map.get(band_raw, "LOW")
+        marker_color = color_map.get(current_band, "green")
+        
+        if "No anomalous signals detected" in contributors:
+            num_signals = 0
+            evidence_html = "<li>None</li>"
+        else:
+            num_signals = len(contributors)
+            evidence_html = "".join([f"<li>{c}</li>" for c in contributors])
+            
+        conf_map = {0: "95%", 1: "55%", 2: "70%", 3: "85%", 4: "95%"}
+        confidence = conf_map.get(min(num_signals, 4), "50%")
+        
+        last_upd = hydro.get("last_updated") or wqi.get("report_period", "Unknown")
+        
         m_sat = folium.Map(
             location=[BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], 
             zoom_start=13, 
             tiles="OpenStreetMap",
             control_scale=True
         )
-        folium.Marker([BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], tooltip="Bhavanisagar Dam").add_to(m_sat)
+        
+        # Context Marker
+        folium.Marker(
+            [BHAVANISAGAR_DAM['latitude'], BHAVANISAGAR_DAM['longitude']], 
+            tooltip="Bhavanisagar Dam",
+            icon=folium.Icon(color="blue", icon="info-sign")
+        ).add_to(m_sat)
+        
+        popup_html = f"""
+        <div style="font-family:sans-serif; width:220px;">
+            <h4 style="margin:0 0 5px 0; color:#333;">{_t('POLLUTION HOTSPOT')}</h4>
+            <b style="color:#555;">{_t('Location')}:</b> <span style="color:#333;">Lower Bhavani River</span><br>
+            <b style="color:#555;">{_t('Risk')}:</b> <span style="color:#333;">{_t(current_band)}</span><br>
+            <b style="color:#555;">{_t('Evidence')}:</b>
+            <ul style="margin:5px 0; padding-left:20px; font-size:12px; color:#333;">
+                {evidence_html}
+            </ul>
+            <b style="color:#555;">{_t('EVIDENCE')}:</b> <span style="color:#333;">{num_signals} / 4 signals</span><br>
+            <b style="color:#555;">{_t('CONFIDENCE')}:</b> <span style="color:#333;">{confidence}</span><br>
+            <b style="color:#555;">{_t('Status')}:</b> <span style="color:#333;">{_t('REQUIRES FIELD VERIFICATION')}</span><br>
+            <div style="margin-top:5px; font-size:10px; color:gray;">
+                Last updated: {last_upd}
+            </div>
+        </div>
+        """
+        
+        hotspot_loc = [BHAVANISAGAR_DAM['latitude'] - 0.005, BHAVANISAGAR_DAM['longitude'] + 0.015]
+        
+        folium.CircleMarker(
+            location=hotspot_loc,
+            radius=15,
+            color=marker_color,
+            fill=True,
+            fill_color=marker_color,
+            fill_opacity=0.6,
+            popup=folium.Popup(popup_html, max_width=250),
+            tooltip=f"{_t('POLLUTION HOTSPOT RISK')}: {_t(current_band)}"
+        ).add_to(m_sat)
+        
+        legend_html = f'''
+        <div style="
+            position: absolute; 
+            bottom: 30px; left: 30px; width: 155px; height: 130px; 
+            background-color: white; border:2px solid grey; z-index:9999; font-size:12px;
+            padding: 10px; font-family: sans-serif; opacity: 0.9; color:#333;">
+            <b>{_t('POLLUTION HOTSPOT RISK')}</b><br>
+            <i style="background:green; border-radius:50%; width:10px; height:10px; display:inline-block; margin-right:5px;"></i> {_t('LOW')}<br>
+            <i style="background:yellow; border-radius:50%; width:10px; height:10px; display:inline-block; margin-right:5px;"></i> {_t('WATCH')}<br>
+            <i style="background:orange; border-radius:50%; width:10px; height:10px; display:inline-block; margin-right:5px;"></i> {_t('ELEVATED')}<br>
+            <i style="background:red; border-radius:50%; width:10px; height:10px; display:inline-block; margin-right:5px;"></i> {_t('HOTSPOT')}
+        </div>
+        '''
+        m_sat.get_root().html.add_child(folium.Element(legend_html))
+        
         components.html(m_sat._repr_html_(), height=350)
 
         # Weather trend

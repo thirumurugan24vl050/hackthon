@@ -277,7 +277,20 @@ TRANSLATIONS = {
         "Is water stress increasing?": "நீர் அழுத்தம் அதிகரிக்கிறதா?",
         "Why is the risk high?": "அபாயம் ஏன் அதிகமாக உள்ளது?",
         "What changed in the last 24 hours?": "கடந்த 24 மணி நேரத்தில் என்ன மாறியது?",
-        "What should authorities check first?": "அதிகாரிகள் முதலில் எதைச் சரிபார்க்க வேண்டும்?"
+        "What should authorities check first?": "அதிகாரிகள் முதலில் எதைச் சரிபார்க்க வேண்டும்?",
+        "POLLUTION HOTSPOT MAP": "மாசுபாடு அபாய வரைபடம்",
+        "POLLUTION HOTSPOT RISK": "மாசுபாடு அபாய நிலை",
+        "POLLUTION HOTSPOT": "மாசுபாடு அபாயப் பகுதி",
+        "LOW": "குறைவு",
+        "WATCH": "கண்காணிப்பு",
+        "ELEVATED": "உயர்ந்தது",
+        "HOTSPOT": "அபாயப் பகுதி",
+        "EVIDENCE": "சான்றுகள்",
+        "CONFIDENCE": "நம்பிக்கை",
+        "REQUIRES FIELD VERIFICATION": "களச் சரிபார்ப்பு தேவை",
+        "Location": "இடம்",
+        "Risk": "அபாயம்",
+        "Status": "நிலை"
     }
 }
 
