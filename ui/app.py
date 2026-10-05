@@ -964,36 +964,50 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
             icon=folium.Icon(color="blue", icon="info-sign")
         ).add_to(m_sat)
         
-        popup_html = f"""
-        <div style="font-family:sans-serif; width:220px;">
-            <h4 style="margin:0 0 5px 0; color:#333;">{_t('POLLUTION HOTSPOT')}</h4>
-            <b style="color:#555;">{_t('Location')}:</b> <span style="color:#333;">Lower Bhavani River</span><br>
-            <b style="color:#555;">{_t('Risk')}:</b> <span style="color:#333;">{_t(current_band)}</span><br>
-            <b style="color:#555;">{_t('Evidence')}:</b>
-            <ul style="margin:5px 0; padding-left:20px; font-size:12px; color:#333;">
-                {evidence_html}
-            </ul>
-            <b style="color:#555;">{_t('EVIDENCE')}:</b> <span style="color:#333;">{num_signals} / 4 signals</span><br>
-            <b style="color:#555;">{_t('CONFIDENCE')}:</b> <span style="color:#333;">{confidence}</span><br>
-            <b style="color:#555;">{_t('Status')}:</b> <span style="color:#333;">{_t('REQUIRES FIELD VERIFICATION')}</span><br>
-            <div style="margin-top:5px; font-size:10px; color:gray;">
-                Last updated: {last_upd}
+        zones = [
+            {"name": "Upper Reach", "loc": [BHAVANISAGAR_DAM['latitude'] - 0.005, BHAVANISAGAR_DAM['longitude'] + 0.015], "risk": "LOW"},
+            {"name": "Mid Reach A", "loc": [BHAVANISAGAR_DAM['latitude'] - 0.010, BHAVANISAGAR_DAM['longitude'] + 0.025], "risk": "WATCH"},
+            {"name": "Mid Reach B", "loc": [BHAVANISAGAR_DAM['latitude'] - 0.015, BHAVANISAGAR_DAM['longitude'] + 0.040], "risk": "ELEVATED"},
+            {"name": "Lower Reach", "loc": [BHAVANISAGAR_DAM['latitude'] - 0.020, BHAVANISAGAR_DAM['longitude'] + 0.055], "risk": "HOTSPOT"}
+        ]
+        
+        for z in zones:
+            z_risk = z["risk"]
+            z_color = color_map.get(z_risk, "green")
+            
+            # Simple simulation: if risk is LOW, evidence is None, else show existing evidence logic
+            z_evidence = "<li>None</li>" if z_risk == "LOW" else evidence_html
+            z_signals = 0 if z_risk == "LOW" else num_signals
+            z_conf = "95%" if z_risk == "LOW" else confidence
+            
+            z_popup = f"""
+            <div style="font-family:sans-serif; width:220px;">
+                <h4 style="margin:0 0 5px 0; color:#333;">{_t('POLLUTION HOTSPOT')}</h4>
+                <b style="color:#555;">{_t('Location')}:</b> <span style="color:#333;">{z['name']}</span><br>
+                <b style="color:#555;">{_t('Risk')}:</b> <span style="color:#333;">{_t(z_risk)}</span><br>
+                <b style="color:#555;">{_t('Evidence')}:</b>
+                <ul style="margin:5px 0; padding-left:20px; font-size:12px; color:#333;">
+                    {z_evidence}
+                </ul>
+                <b style="color:#555;">{_t('EVIDENCE')}:</b> <span style="color:#333;">{z_signals} / 4 signals</span><br>
+                <b style="color:#555;">{_t('CONFIDENCE')}:</b> <span style="color:#333;">{z_conf}</span><br>
+                <b style="color:#555;">{_t('Status')}:</b> <span style="color:#333;">{_t('REQUIRES FIELD VERIFICATION')}</span><br>
+                <div style="margin-top:5px; font-size:10px; color:gray;">
+                    Last updated: {last_upd}
+                </div>
             </div>
-        </div>
-        """
-        
-        hotspot_loc = [BHAVANISAGAR_DAM['latitude'] - 0.005, BHAVANISAGAR_DAM['longitude'] + 0.015]
-        
-        folium.CircleMarker(
-            location=hotspot_loc,
-            radius=15,
-            color=marker_color,
-            fill=True,
-            fill_color=marker_color,
-            fill_opacity=0.6,
-            popup=folium.Popup(popup_html, max_width=250),
-            tooltip=f"{_t('POLLUTION HOTSPOT RISK')}: {_t(current_band)}"
-        ).add_to(m_sat)
+            """
+            
+            folium.CircleMarker(
+                location=z["loc"],
+                radius=15,
+                color=z_color,
+                fill=True,
+                fill_color=z_color,
+                fill_opacity=0.6,
+                popup=folium.Popup(z_popup, max_width=250),
+                tooltip=f"{_t('POLLUTION HOTSPOT RISK')}: {_t(z_risk)}"
+            ).add_to(m_sat)
         
         legend_html = f'''
         <div style="
