@@ -831,7 +831,7 @@ def page_mission_control(hydro, weather, wqi, news, alerts, activity, mode):
                     <div style="font-size:12px;color:#94A3B8;">{ev_html}</div>
                 </div>""", unsafe_allow_html=True)
         else:
-            st.markdown("""
+            st.markdown(f"""
             <div class="panel" style="text-align:center;color:#94A3B8;">
                 <div style="font-size:24px;margin-bottom:8px;">✅</div>
                 <div style="font-weight:600;">{_t('NO CRITICAL ALERTS')}</div>
@@ -1012,17 +1012,6 @@ def page_environmental_intelligence(hydro, weather, wqi, news, alerts, activity,
         - **Google News** — {_t("NEWS DISCOVERY")}
         - **GDELT** — {_t("NEWS DISCOVERY")}
         """)
-        #
-        st.markdown("""
-        - **Open-Meteo** — {_t("WEATHER")} + {_t("FORECAST")}
-        - **Tamil Nadu AgriNet** — {_t("Reservoir")} {_t("OFFICIAL")}
-        - **TNPCB** — {_t("WATER QUALITY")} (Station 1321)
-        - **NASA GIBS** — {_t("SATELLITE")} (MODIS Terra)
-        - **OpenStreetMap** — {_t("ENVIRONMENTAL MAP")}
-        - **Google News** — {_t("NEWS DISCOVERY")}
-        - **GDELT** — {_t("NEWS DISCOVERY")}
-        """)
-
 
 # ══════════════════════════════════════════════════════════════
 # PAGE 3: AI ANALYST & RISK
@@ -1074,7 +1063,7 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts, activity, mode):
                     <div style="font-size:12px;color:#94A3B8;">{ev_html}</div>
                 </div>""", unsafe_allow_html=True)
         else:
-            st.markdown("""
+            st.markdown(f"""
             <div class="panel" style="text-align:center;color:#94A3B8;">
                 <div style="font-size:24px;margin-bottom:8px;">✅</div>
                 <div style="font-weight:600;">{_t('NO ACTIVE ALERTS')}</div>
@@ -1134,7 +1123,7 @@ def page_ai_analyst(hydro, weather, wqi, news, alerts, activity, mode):
             </div>""", unsafe_allow_html=True)
         else:
             # Placeholder
-            st.markdown("""
+            st.markdown(f"""
             <div class="panel" style="min-height:300px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
                 <div style="font-size:36px;margin-bottom:16px;">🔬</div>
                 <div style="font-weight:600;color:#F8FAFC;font-size:16px;">{_t('AI ENVIRONMENTAL ANALYST')}</div>
@@ -1255,7 +1244,7 @@ def main():
     if "page" not in st.session_state:
         st.session_state.page = "Mission Control"
     if "data_mode" not in st.session_state:
-        st.session_state.data_mode = "DEMO"
+        st.session_state.data_mode = "UPDATES"
     if "demo_scenario" not in st.session_state:
         st.session_state.demo_scenario = "NORMAL"
 
@@ -1271,12 +1260,12 @@ def main():
         st.markdown("<div style=\'height:1px;background:rgba(148,163,184,0.14);margin-bottom:24px;\'></div>", unsafe_allow_html=True)
         st.markdown(f"<div class=\'eyebrow\'>{_t('DATA MODE')}</div>", unsafe_allow_html=True)
         st.session_state.data_mode = st.radio(
-            _t("Mode"), ["LIVE", "DEMO"], label_visibility="collapsed", key="mode_radio_1218",
-            index=1 if st.session_state.data_mode == "DEMO" else 0
+            _t("Mode"), ["LIVE", "UPDATES"], label_visibility="collapsed", key="mode_radio_1218",
+            index=1 if st.session_state.data_mode == "UPDATES" else 0
         )
 
-        if st.session_state.data_mode == "DEMO":
-            st.markdown(f"<div class=\'eyebrow\' style=\'margin-top:12px;\'>{_t('DEMO SCENARIO')}</div>", unsafe_allow_html=True)
+        if st.session_state.data_mode == "UPDATES":
+            st.markdown(f"<div class=\'eyebrow\' style=\'margin-top:12px;\'>{_t('UPDATES SCENARIO')}</div>", unsafe_allow_html=True)
             st.session_state.demo_scenario = st.selectbox(
             _t("Scenario"), ["NORMAL", "LOW_STORAGE", "HEAVY_RAINFALL", "POLLUTION_RUNOFF"],
                 label_visibility="collapsed"
@@ -1285,10 +1274,10 @@ def main():
     mode = st.session_state.data_mode
 
     # Fetch data based on mode
-    if mode == "DEMO":
+    if mode == "UPDATES":
         result = get_demo_data(st.session_state.demo_scenario)
         if result[0] is None:
-            st.error("Demo dataset not found. Please ensure data/demo/hydro_mind_demo.json exists.")
+            st.error("Updates dataset not found. Please ensure data/demo/hydro_mind_demo.json exists.")
             return
         hydro, weather, wqi, news, alerts, activity = result
     else:
